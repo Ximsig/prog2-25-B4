@@ -3,8 +3,8 @@
 
 ## Autores
 
-* (Coordinador) [Juan Carlos Valentin Pérez](https://github.com/alumno1)
-* [Joaquín Sigüenza Chilar](https://github.com/Ximsig)
+* (Coordinador)[Joaquín Sigüenza Chilar](https://github.com/Ximsig)
+* [Juan Carlos Valentin Pérez](https://github.com/alumno1)
 * [Sandra Crevillen Contreras](https://github.com/alumno3)
 * [Jorge Soto Tripiana](https://github.com/alumno4)
 * [NIcolás Sanchez Saura](https://github.com/alumno5)
