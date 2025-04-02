@@ -4,70 +4,171 @@ def crear_bd():
     """
     Crea la base de datos si aun no existe.
     """
-    conn = sqlite3.connect("compraventa_vehiculos.db")
-    cursor = conn.cursor()
+    try:
+        conn = sqlite3.connect("compraventa_vehiculos.db")
+        cursor = conn.cursor()
 
-    # Tabla usuarios
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS usuarios (
-            id INTEGER,
-            nombre TEXT NOT NULL,
-            PRIMARY KEY(id)
-        )
-    """)
+        # Tabla usuarios
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS usuarios (
+                nombre TEXT,
+                PRIMARY KEY(nombre)
+            )
+        """)
 
-    # Tabla chats
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS chats (
-            id_usuario1 INTEGER,
-            id_usuario2 INTEGER,
-            chat TEXT,
-            PRIMARY KEY(id_usuario1, id_usuario2),
-            FOREIGN KEY(id_usuario1) references usuarios(id),
-            FOREIGN KEY(id_usuario2) references usuarios(id)
-        )
-    """)
-    
-    conn.commit()
-    conn.close()
+        # Tabla chats
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chats (
+                id_usuario1 TEXT,
+                id_usuario2 TEXT,
+                chat TEXT,
+                PRIMARY KEY(id_usuario1, id_usuario2),
+                FOREIGN KEY(id_usuario1) REFERENCES usuarios(nombre),
+                FOREIGN KEY(id_usuario2) REFERENCES usuarios(nombre)
+            )
+        """)
+        
+        conn.commit()
+        return True
+    except sqlite3.Error as e:
+        print(f"Error al crear la base de datos: {e}")
+        return False
+    finally:
+        if conn:
+            conn.close()
 
-def agregar_usuario(id, nombre):
+def agregar_usuario(nombre):
     """
     Añade un nuevo usuario
 
     Parametros:
-    id(int): id única para cada usuario
-    nombre(str): nombre del usuario
+    nombre(str): unico para cada usuario
     """
-    conn = sqlite3.connect("compraventa_vehiculos.db")
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO usuarios VALUES (?, ?)", (id, nombre))
-    conn.commit()
-    conn.close()
+    conn = None
+    try:
+        if not isinstance(nombre, str):
+            raise ValueError("El nombre debe ser una cadena de texto")
+        
+        if not nombre.strip():
+            raise ValueError("El nombre no puede estar vacío")
+            
+        conn = sqlite3.connect("compraventa_vehiculos.db")
+        cursor = conn.cursor()
+        
+        cursor.execute("INSERT INTO usuarios VALUES (?)", (nombre,))
+        conn.commit()
+        print('Usuario creado correctamente')
+        return True
+    except sqlite3.IntegrityError:
+        print('Ya hay un usuario con ese nombre, debes usar un nombre único')
+        return False
+    except ValueError as e:
+        print(f"Error: {e}")
+        return False
+    except sqlite3.Error as e:
+        print(f"Error de base de datos: {e}")
+        return False
+    finally:
+        if conn:
+            conn.close()
 
-def crear_chat(id_usuario1, id_usuario2, chat=''):
-    if id_usuario1 > id_usuario2:
-        id_usuario1, id_usuario2 = id_usuario2, id_usuario1
-    conn = sqlite3.connect("compraventa_vehiculos.db")
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO chats VALUES (?, ?, ?)", (id_usuario1, id_usuario2, chat))
-    conn.commit()
-    conn.close()
-    print('Chat creado correctamente')
+def mostrar_usuarios():
+    """
+    Muestra todos los usuarios de la bd.
+    """
+    conn = None
+    try:
+        conn = sqlite3.connect("compraventa_vehiculos.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM usuarios")
+        consulta = cursor.fetchall()
+        
+        if not consulta:
+            print("No hay usuarios registrados")
+            return []
+            
+        for idx, usuario in enumerate(consulta):
+            print(f'Usuario {idx}: {usuario[0]}')
+        return [usuario[0] for usuario in consulta]
+    except sqlite3.Error as e:
+        print(f"Error al mostrar usuarios: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+def crear_chat(id_usuario1, id_usuario2):
+    conn = None
+    try:
+        if id_usuario1 == id_usuario2:
+            raise ValueError("No puedes crear un chat contigo mismo")
+            
+        conn = sqlite3.connect("compraventa_vehiculos.db")
+        cursor = conn.cursor()
+        
+        # Verificar que los usuarios existen
+        cursor.execute("SELECT 1 FROM usuarios WHERE nombre=?", (id_usuario1,))
+        if not cursor.fetchone():
+            raise ValueError(f"El usuario {id_usuario1} no existe")
+            
+        cursor.execute("SELECT 1 FROM usuarios WHERE nombre=?", (id_usuario2,))
+        if not cursor.fetchone():
+            raise ValueError(f"El usuario {id_usuario2} no existe")
+        
+        id_usuario1, id_usuario2 = sorted([id_usuario1, id_usuario2])  # Ordenamos para evitar problemas con la clave primaria
+
+        cursor.execute("SELECT 1 FROM chats WHERE id_usuario1=? AND id_usuario2=?", (id_usuario1, id_usuario2))
+        if cursor.fetchone():
+            print("Ya teneis un chat.")
+            return False
+        else:
+            cursor.execute("INSERT INTO chats VALUES (?, ?, ?)", (id_usuario1, id_usuario2, ''))
+            conn.commit()
+            print("Chat creado correctamente.")
+            return True
+    except ValueError as e:
+        print(f"Error: {e}")
+        return False
+    except sqlite3.Error as e:
+        print(f"Error de base de datos: {e}")
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+def ver_chats():
+    conn = None
+    try:
+        conn = sqlite3.connect("compraventa_vehiculos.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM chats")
+        consulta = cursor.fetchall()
+        
+        if not consulta:
+            print("No hay chats creados")
+            return []
+            
+        for idx, chat in enumerate(consulta):
+            print(f'Chat {idx}: {chat[0]} - {chat[1]}')
+        return consulta
+    except sqlite3.Error as e:
+        print(f"Error al ver chats: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
 
 def obtener_chat(id_emisor, id_receptor, cursor):
-    if id_emisor > id_receptor:
-        id_emisor, id_receptor = id_receptor, id_emisor
-    cursor.execute(f"""
-        SELECT chat FROM chats
-        where id_usuario1={id_emisor}
-        and id_usuario2={id_receptor}
-    """)
-    chat = cursor.fetchone()[0]
-    return chat
-    
-    
-
+    try:
+        cursor.execute("""
+            SELECT chat FROM chats
+            WHERE id_usuario1 = ? AND id_usuario2 = ?
+        """, (id_emisor, id_receptor))
+        chat = cursor.fetchone()
+        return chat[0] if chat else ""  # Evitamos errores si el chat no existe
+    except sqlite3.Error as e:
+        print(f"Error al obtener chat: {e}")
+        return ""
 
 def enviar_mensaje(id_emisor, id_receptor, mensaje):
     """
@@ -76,51 +177,115 @@ def enviar_mensaje(id_emisor, id_receptor, mensaje):
     Parámetros:
     ids usuarios
     mensaje(str): mensaje a enviar
-        
     """
-    conn = sqlite3.connect("compraventa_vehiculos.db")
-    cursor = conn.cursor()
-    cursor.execute(f"SELECT nombre from usuarios where id={id_emisor}")
-    emisor = cursor.fetchone()[0]
-    if id_emisor > id_receptor:
-        id_emisor, id_receptor = id_receptor, id_emisor
-    #chat = obtener_chat(id_emisor, id_receptor, cursor)
-    mensaje = f'{emisor}: ' + mensaje + '/s'
-    cursor.execute(f"""UPDATE chats set chat=chat || ? 
-        where id_usuario1=? and id_usuario2=?""", (mensaje, id_emisor, id_receptor))
-    conn.commit()
-    conn.close()
+    conn = None
+    try:
+        if not mensaje.strip():
+            raise ValueError("El mensaje no puede estar vacío")
+            
+        conn = sqlite3.connect("compraventa_vehiculos.db")
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT nombre FROM usuarios WHERE nombre = ?", (id_emisor,))
+        emisor = cursor.fetchone()
+        if not emisor:
+            raise ValueError("El usuario emisor no existe.")
+        emisor = emisor[0]  # Extraer el nombre
+        
+        cursor.execute("SELECT nombre FROM usuarios WHERE nombre = ?", (id_receptor,))
+        if not cursor.fetchone():
+            raise ValueError("El usuario receptor no existe.")
+
+        mensaje_formateado = f'{emisor}: {mensaje}\n'
+        
+        # Verificamos si existe el chat
+        id_usuario1, id_usuario2 = sorted([id_emisor, id_receptor])
+        cursor.execute("SELECT 1 FROM chats WHERE id_usuario1=? AND id_usuario2=?", (id_usuario1, id_usuario2))
+        if not cursor.fetchone():
+            raise ValueError("No existe un chat entre estos usuarios")
+        
+        cursor.execute("""
+            UPDATE chats SET chat = chat || ?
+            WHERE id_usuario1 = ? AND id_usuario2 = ?
+        """, (mensaje_formateado, id_usuario1, id_usuario2))
+
+        conn.commit()
+        print("Mensaje enviado correctamente")
+        return True
+    except ValueError as e:
+        print(f"Error: {e}")
+        return False
+    except sqlite3.Error as e:
+        print(f"Error de base de datos: {e}")
+        return False
+    finally:
+        if conn:
+            conn.close()
 
 def leer_chat(id_emisor, id_receptor):
-    if id_emisor > id_receptor:
-        id_emisor, id_receptor = id_receptor, id_emisor
-    conn = sqlite3.connect("compraventa_vehiculos.db")
-    cursor = conn.cursor()
-    chat = obtener_chat(id_emisor, id_receptor, cursor)
-    conn.close()
-    chat = chat.split('/s')
-    for linea in chat:
-        print(linea)
+    conn = None
+    try:
+        conn = sqlite3.connect("compraventa_vehiculos.db")
+        cursor = conn.cursor()
+        
+        # Verificar que los usuarios existen
+        cursor.execute("SELECT 1 FROM usuarios WHERE nombre=?", (id_emisor,))
+        if not cursor.fetchone():
+            raise ValueError(f"El usuario {id_emisor} no existe")
+            
+        cursor.execute("SELECT 1 FROM usuarios WHERE nombre=?", (id_receptor,))
+        if not cursor.fetchone():
+            raise ValueError(f"El usuario {id_receptor} no existe")
+        
+        id_usuario1, id_usuario2 = sorted([id_emisor, id_receptor])
+        cursor.execute("SELECT chat FROM chats WHERE id_usuario1=? AND id_usuario2=?", (id_usuario1, id_usuario2))
+        chat = cursor.fetchone()
 
+        if not chat:
+            raise ValueError("No existe un chat entre estos usuarios")
+            
+        chat = chat[0]
+        if not chat.strip():
+            print("No hay mensajes en este chat.")
+            return []
+            
+        chat_lineas = chat.strip().split("\n")
+        for linea in chat_lineas:
+            print(linea)
+        return chat_lineas
+    except ValueError as e:
+        print(f"Error: {e}")
+        return []
+    except sqlite3.Error as e:
+        print(f"Error al leer chat: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
 
 if __name__ == '__main__':
     # Primera vez, luego cambiar el 1 por 0
     if 1:
-        # Creamos bd
-        crear_bd()
-        #Agregamos tres  usuarios
-        agregar_usuario(1, 'Jordi')
-        agregar_usuario(2, 'Ximo')
-        agregar_usuario(3, 'Linxi')
-        # Creamos chats
-        crear_chat(1, 2) # Jordi , Ximo
-        crear_chat(3, 1) # Linxi , Jordi
-    # Mandamos mensajes
-    enviar_mensaje(1, 2, 'Hola, cuanto vale?')
-    leer_chat(1, 2)
-    enviar_mensaje(2, 1, 'Buenas, 2500€')
-    leer_chat(2, 1)
-    enviar_mensaje(3, 1, 'Cuantos km')
-    enviar_mensaje(1, 3, '200mil')
-    leer_chat(3, 1)
-    leer_chat(1, 3)
+        try:
+            # Creamos bd
+            if not crear_bd():
+                raise Exception("Error al crear la base de datos")
+                
+            # Agregamos dos usuarios
+            if not agregar_usuario('Linxi'):
+                print("Advertencia: Problema al agregar usuario Linxi")
+            if not agregar_usuario('Jordi'):
+                print("Advertencia: Problema al agregar usuario Jordi")
+
+            # Creamos chat y enviamos mensajes
+            if not crear_chat('Jordi', 'Linxi'):
+                print("Advertencia: Problema al crear chat")
+            if not enviar_mensaje('Linxi', 'Jordi', 'Te doy 11500'):
+                print("Advertencia: Problema al enviar mensaje de Linxi")
+            if not enviar_mensaje('Jordi', 'Linxi', 'Venga vale'):
+                print("Advertencia: Problema al enviar mensaje de Jordi")
+
+            # Ver chats y leerlos
+            leer_chat('Linxi', 'Jordi')
+        except Exception as e:
+            print(f"Error general: {e}")
