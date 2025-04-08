@@ -6,37 +6,21 @@ class HistorialDelVehiculo:
         self.registro_siniestros = []
 
     def agregar_mantenimiento(self, fecha, descripcion):
-        """
-        Agrega un registro de mantenimiento al historial.
-        
-        :param fecha: Fecha del mantenimiento (string o datetime)
-        :param descripcion: Descripción del mantenimiento realizado
-        """
+
         self.registro_mantenimiento.append({
             'fecha': fecha,
             'descripcion': descripcion
         })
 
     def agregar_revision(self, fecha, descripcion):
-        """
-        Agrega un registro de revisión al historial.
-        
-        :param fecha: Fecha de la revisión (string o datetime)
-        :param descripcion: Descripción de la revisión realizada
-        """
+
         self.registro_revisiones.append({
             'fecha': fecha,
             'descripcion': descripcion
         })
 
     def agregar_siniestro(self, fecha, descripcion, valor_estimado):
-        """
-        Agrega un registro de siniestro (accidente) al historial.
-        
-        :param fecha: Fecha del siniestro (string o datetime)
-        :param descripcion: Descripción del siniestro ocurrido
-        :param valor_estimado: Valor estimado de los daños ocasionados
-        """
+
         self.registro_siniestros.append({
             'fecha': fecha,
             'descripcion': descripcion,
@@ -44,11 +28,7 @@ class HistorialDelVehiculo:
         })
 
     def generar_informe_siniestralidad(self):
-        """
-        Genera y retorna un informe en texto de la siniestralidad del vehículo.
-        
-        :return: Cadena de texto con el informe de siniestralidad.
-        """
+
         lineas = []
         lineas.append("Informe de Siniestralidad del Vehículo")
         lineas.append("=" * 40)
