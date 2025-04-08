@@ -1,29 +1,13 @@
 class EstimadorValorReventa:
     def __init__(self, modelo, anio, kilometraje, datos_mercado):
-        """
-        Inicializa la herramienta con la información básica del vehículo y datos de mercado.
-        
-        :param modelo: Modelo del vehículo (str).
-        :param anio: Año de fabricación o modelo (int o str).
-        :param kilometraje: Kilometraje actual del vehículo (int).
-        :param datos_mercado: Diccionario con datos de mercado, que debe incluir al menos 'valor_base' para cada modelo.
-        """
+
         self.modelo = modelo
         self.anio = int(anio)
         self.kilometraje = kilometraje
         self.datos_mercado = datos_mercado
 
     def calcular_valor_reventa(self):
-        """
-        Calcula el valor estimado de reventa basado en el valor base de mercado,
-        depreciación por años de uso y kilometraje.
-        
-        Se usan dos tasas de depreciación:
-          - 10% anual por cada año de antigüedad.
-          - 5% por cada 10,000 km recorridos.
 
-        :return: Valor estimado de reventa (float).
-        """
         # Obtener el valor base del modelo desde los datos de mercado
         modelo_info = self.datos_mercado.get(self.modelo, {})
         valor_base = modelo_info.get('valor_base', 0)
@@ -45,11 +29,7 @@ class EstimadorValorReventa:
         return round(valor_estimado, 2)
 
     def generar_reporte_estimacion(self):
-        """
-        Genera un informe en texto con los detalles del vehículo y el valor estimado de reventa.
-        
-        :return: Cadena de texto con el reporte.
-        """
+ 
         reporte = []
         reporte.append("Reporte de Estimación de Valor de Reventa")
         reporte.append("=" * 50)
