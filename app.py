@@ -6,17 +6,26 @@ app = Flask(__name__)
 def index():
     return render_template("index.html")
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    return "<h2>Página de Inicio de Sesión</h2>"
+    if request.method == "POST":
+        usuario = request.form["usuario"]
+        contrasena = request.form["contrasena"]
+        return f'Usuario: {usuario}    Contraseña: {contrasena}'
+    return render_template("login.html")
 
-@app.route("/registro")
+@app.route("/registro", methods=["GET", "POST"])
 def registro():
-    return "<h2>Página de Registro</h2>"
+    if request.method == "POST":
+        usuario = request.form["usuario"]
+        contrasena = request.form["contrasena"]
+        confirmar = request.form["confirmar"]
+        return f'Usuario: {usuario}    Contraseña: {contrasena}'
+    return render_template("registro.html")
 
 @app.route("/valoraciones")
 def valoraciones():
-    return "<h2>Página de valoraciones<h2>"
+    return render_template("valoraciones.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
