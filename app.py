@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, flash, session, url_for, redirect
-from chat import iniciar_sesion, registrar_usuario, crear_bd
+from sql_usuarios import iniciar_sesion, registrar_usuario, crear_bd # sql_usuarios.py en la rama de registros
 
 
 app = Flask(__name__)
