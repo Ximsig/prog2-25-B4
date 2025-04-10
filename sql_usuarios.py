@@ -121,7 +121,7 @@ def iniciar_sesion(nombre, contraseña):
     except ValueError as e:
         print(f"Error: {e}")
         return False
-    except sqlite3.Error as e:
+    except sqlite3.Error as e:base de datos
         print(f"Error de base de datos: {e}")
         return False
     finally:

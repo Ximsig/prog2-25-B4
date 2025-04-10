@@ -134,7 +134,7 @@ class Plataforma:
 
     def realizar_compra(self, comprador: Usuario, vehiculo: Vehiculo):
         """
-       Registra la compra de un vehículo por un comprador.
+       Registra la compra de un vehículo por un comprador.base de datos
        Parámetros:
        - comprador (Usuario): usuario que compra.
        - vehiculo (Vehiculo): vehículo que se desea comprar.
