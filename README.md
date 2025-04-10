@@ -14,7 +14,12 @@
 
 ## Requisitos
 [//]: # (Indicad aquí los requisitos de vuestra aplicación, así como el alumno responsable de cada uno de ellos)
-* ... (Alumno x)
+* Registro de usuarios (compradores y vendedores), base de datos y generación de contratos (Sandra)
+* Publicación del producto (creación, edición y eliminación de anuncios, así como la posibilidad de destacarlos mediante pago) (Nicolás)
+* Historial completo del vehículo (informe de siniestralidad y mantenimientos), herramienta de estimación de valor de reventa (Joaquín)
+* Sistema de búsqueda y ordenación (con filtros por precio, marca, modelo, año, kilometraje, etc.) (Juan Carlos)
+* Chat entre compradores y vendedores y valoraciones y reseñas de los usuarios (Jorge)
+* Integración de la API (entre todos)
 
 ## Instrucciones de instalación y ejecución
 [//]: # (Indicad aquí qué habría que hacer para ejecutar vuestra aplicación)
