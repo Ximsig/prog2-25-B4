@@ -1,4 +1,12 @@
 import sqlite3
+import hashlib
+
+'''
+
+CÓDIGO AUXILIAR PROBAR USUARIOS API
+
+def hash_contraseña(contraseña):
+    return hashlib.sha256(contraseña.encode()).hexdigest()
 
 def crear_bd():
     """
@@ -12,6 +20,7 @@ def crear_bd():
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS usuarios (
                 nombre TEXT,
+                contraseña TEXT,
                 PRIMARY KEY(nombre)
             )
         """)
@@ -37,13 +46,14 @@ def crear_bd():
         if conn:
             conn.close()
 
-def agregar_usuario(nombre):
+def registrar_usuario(nombre, contraseña):
     """
     Añade un nuevo usuario
 
     Parametros:
     nombre(str): unico para cada usuario
     """
+    hash = hash_contraseña(contraseña)
     conn = None
     try:
         if not isinstance(nombre, str):
@@ -55,7 +65,7 @@ def agregar_usuario(nombre):
         conn = sqlite3.connect("compraventa_vehiculos.db")
         cursor = conn.cursor()
         
-        cursor.execute("INSERT INTO usuarios VALUES (?)", (nombre,))
+        cursor.execute("INSERT INTO usuarios VALUES (?, ?)", (nombre, hash))
         conn.commit()
         print('Usuario creado correctamente')
         return True
@@ -71,6 +81,54 @@ def agregar_usuario(nombre):
     finally:
         if conn:
             conn.close()
+
+def iniciar_sesion(nombre, contraseña):
+    """
+    Verifica si el usuario existe y si la contraseña es correcta.
+
+    Parámetros:
+    - nombre (str): nombre del usuario.
+    - contraseña (str): contraseña en texto plano, se comparará usando su hash.
+
+    Retorna:
+    - True si el inicio de sesión es exitoso.
+    - False en caso contrario.
+    """
+    conn = None
+    try:
+        if not nombre.strip() or not contraseña.strip():
+            raise ValueError("El nombre y la contraseña no pueden estar vacíos.")
+
+        hash_ingresado = hash_contraseña(contraseña)
+
+        conn = sqlite3.connect("compraventa_vehiculos.db")
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT contraseña FROM usuarios WHERE nombre = ?", (nombre,))
+        resultado = cursor.fetchone()
+
+        if not resultado:
+            print("El usuario no existe.")
+            return False
+
+        hash_guardado = resultado[0]
+
+        if hash_ingresado == hash_guardado:
+            print("Inicio de sesión exitoso.")
+            return True
+        else:
+            print("Contraseña incorrecta.")
+            return False
+    except ValueError as e:
+        print(f"Error: {e}")
+        return False
+    except sqlite3.Error as e:
+        print(f"Error de base de datos: {e}")
+        return False
+    finally:
+        if conn:
+            conn.close()
+
 
 def mostrar_usuarios():
     """
@@ -96,7 +154,11 @@ def mostrar_usuarios():
     finally:
         if conn:
             conn.close()
+'''
 
+############
+# Mi parte #
+############
 def crear_chat(id_usuario1, id_usuario2):
     conn = None
     try:
@@ -264,28 +326,8 @@ def leer_chat(id_emisor, id_receptor):
             conn.close()
 
 if __name__ == '__main__':
-    # Primera vez, luego cambiar el 1 por 0
-    if 1:
-        try:
-            # Creamos bd
-            if not crear_bd():
-                raise Exception("Error al crear la base de datos")
-                
-            # Agregamos dos usuarios
-            if not agregar_usuario('Linxi'):
-                print("Advertencia: Problema al agregar usuario Linxi")
-            if not agregar_usuario('Jordi'):
-                print("Advertencia: Problema al agregar usuario Jordi")
-
-            # Creamos chat y enviamos mensajes
-            if not crear_chat('Jordi', 'Linxi'):
-                print("Advertencia: Problema al crear chat")
-            if not enviar_mensaje('Linxi', 'Jordi', 'Te doy 11500'):
-                print("Advertencia: Problema al enviar mensaje de Linxi")
-            if not enviar_mensaje('Jordi', 'Linxi', 'Venga vale'):
-                print("Advertencia: Problema al enviar mensaje de Jordi")
-
-            # Ver chats y leerlos
-            leer_chat('Linxi', 'Jordi')
-        except Exception as e:
-            print(f"Error general: {e}")
+    crear_bd()
+    registrar_usuario('Jordi', 'jordi123')
+    iniciar_sesion('Juanjo', 'j1332')
+    iniciar_sesion('Javier', 'jordi123')
+    iniciar_sesion('Jordi', 'jordi123')
