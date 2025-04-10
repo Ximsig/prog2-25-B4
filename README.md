@@ -20,5 +20,9 @@
 [//]: # (Indicad aquí qué habría que hacer para ejecutar vuestra aplicación)
 
 ## Resumen de la API
-[//]: # (Cuando tengáis la API, añadiréis aquí la descripción de las diferentes llamadas.)
-[//]: # (Para la evaluación por pares, indicaréis aquí las diferentes opciones de vuestro menú textual, especificando para qué sirve cada una de ellas)
+[//]: # Esta es una API web básica construida con Flask que permite a los usuarios registrarse, iniciar sesión y acceder a diferentes secciones como valoraciones. Incluye manejo de sesiones, validaciones simples y estructura inicial para expandir funcionalidades como creación y visualización de anuncios.
+La API incluye las siguientes rutas:
+  / — Página principal e inicialización de la base de datos.
+  /login — Página de inicio de sesión.
+  /registro — Página de registro de nuevos usuarios.
+  /valoraciones — Sección de valoraciones.
