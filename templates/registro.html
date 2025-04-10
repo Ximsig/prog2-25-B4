@@ -96,11 +96,38 @@
         .footer-text a:hover {
             text-decoration: underline;
         }
+        .alert {
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background-color: #e3f2fd;
+            color: #0d47a1;
+            border: 1px solid #bbdefb;
+        }
+        
+        .alert-danger {
+            background-color: #ffebee;
+            color: #b71c1c;
+            border-color: #ffcdd2;
+        }
+        
+        .alert-success {
+            background-color: #e8f5e9;
+            color: #1b5e20;
+            border-color: #c8e6c9;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Crear cuenta</h2>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
         <form method="POST">
             <div class="form-group">
                 <label for="usuario">Nombre de usuario</label>

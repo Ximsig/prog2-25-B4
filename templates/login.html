@@ -96,11 +96,47 @@
         .footer-text a:hover {
             text-decoration: underline;
         }
+
+        /* --- CSS AÑADIDO PARA LAS ALERTAS --- */
+        .alert {
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background-color: #e3f2fd; /* Estilo por defecto (info) */
+            color: #0d47a1;
+            border: 1px solid #bbdefb;
+            text-align: left; /* Asegura que el texto esté alineado a la izquierda */
+        }
+        
+        .alert-danger {
+            background-color: #ffebee;
+            color: #b71c1c;
+            border-color: #ffcdd2;
+        }
+        
+        .alert-success {
+            background-color: #e8f5e9;
+            color: #1b5e20;
+            border-color: #c8e6c9;
+        }
+        /* --- FIN CSS AÑADIDO --- */
+
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Iniciar Sesión</h2>
+
+        <!-- Bloque para mostrar mensajes flash (ya estaba bien) -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                 <!-- Usará las clases CSS añadidas: alert y alert-success/danger/info -->
+                <div class="alert alert-{{ category if category else 'info' }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
         <form method="POST">
             <div class="form-group">
                 <label for="usuario">Nombre de usuario</label>
@@ -114,7 +150,8 @@
             
             <button type="submit">Acceder</button>
             
-            <p class="footer-text">¿No tienes una cuenta? <a href="registro">Registrarse</a></p>
+            <p class="footer-text">¿No tienes una cuenta? <a href="{{ url_for('registro') }}">Registrarse</a></p> 
+            <!-- Pequeña mejora: usar url_for para el enlace de registro -->
         </form>
     </div>
 </body>
