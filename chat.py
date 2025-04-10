@@ -324,10 +324,3 @@ def leer_chat(id_emisor, id_receptor):
     finally:
         if conn:
             conn.close()
-
-if __name__ == '__main__':
-    crear_bd()
-    registrar_usuario('Jordi', 'jordi123')
-    iniciar_sesion('Juanjo', 'j1332')
-    iniciar_sesion('Javier', 'jordi123')
-    iniciar_sesion('Jordi', 'jordi123')
