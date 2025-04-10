@@ -30,8 +30,6 @@ def registro():
         usuario = request.form["usuario"].strip()
         contrasena = request.form["contrasena"]
         confirmar = request.form["confirmar"]
-        print('peticion post')
-        print(usuario, contrasena, confirmar)
 
         # Validación de campos vacíos
         if not usuario or not contrasena or not confirmar:
