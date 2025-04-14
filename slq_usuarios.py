@@ -80,7 +80,6 @@ def registrar_usuario(nombre, contraseña):
         if conn:
             conn.close()
 
-
 def iniciar_sesion(nombre, contraseña):
     """
     Verifica si el usuario existe y si la contraseña es correcta.
@@ -121,35 +120,9 @@ def iniciar_sesion(nombre, contraseña):
     except ValueError as e:
         print(f"Error: {e}")
         return False
-    except sqlite3.Error as e:base de datos
+    except sqlite3.Error as e:
         print(f"Error de base de datos: {e}")
         return False
-finally:
-    if conn:
-        conn.close()
-
-
-def mostrar_usuarios():
-    """
-    Muestra todos los usuarios de la bd.
-    """
-    conn = None
-    try:
-        conn = sqlite3.connect("compraventa_vehiculos.db")
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM usuarios")
-        consulta = cursor.fetchall()
-
-        if not consulta:
-            print("No hay usuarios registrados")
-            return []
-
-        for idx, usuario in enumerate(consulta):
-            print(f'Usuario {idx}: {usuario[0]}')
-        return [usuario[0] for usuario in consulta]
-    except sqlite3.Error as e:
-        print(f"Error al mostrar usuarios: {e}")
-        return []
     finally:
         if conn:
             conn.close()
