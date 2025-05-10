@@ -1,4 +1,4 @@
-# Aqui hacemos el menú para que el usuario interactúe con la app.
+# Aqui hacemos el menú para que el usuario interactúe con la API.
 import requests
 import json
 
@@ -60,7 +60,7 @@ def iniciar_sesion():
 
     try:
         respuesta = requests.post(f"{URL}/login", json={"nombre":nombre,"contraseña":contraseña})
-        if token:
+        if "acces_token" in respuesta.json():
             token = respuesta.json()["acces_token"]
         if respuesta.status_code == 200:
             print("✅ Sesión iniciada correctamente")
@@ -185,4 +185,4 @@ if __name__ == "__main__":
                     print("Cerrando sesión...")
                     token = None  # Cierra sesión
                 case _:
-                    print("Opción no válida. Intenta nuevamente.")
+                    print("Opción no válida. Intente nuevamente.")
