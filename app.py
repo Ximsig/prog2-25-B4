@@ -1,6 +1,6 @@
 from flask import Flask, request
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from chat import iniciar_sesion, registrar_usuario, crear_bd
+from sql_usuarios import iniciar_sesion, registrar_usuario, crear_bd
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = "39vnv03+$^4"  # ¡Usa una clave segura en producción!
