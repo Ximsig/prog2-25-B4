@@ -1,61 +1,51 @@
-from flask import Flask, render_template, request, flash, session, url_for, redirect
-from sql_usuarios import iniciar_sesion, registrar_usuario, crear_bd # sql_usuarios.py en la rama de registros
-
+from flask import Flask, request
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from chat import iniciar_sesion, registrar_usuario, crear_bd
 
 app = Flask(__name__)
-app.secret_key = "183buc80y01c91ñ21z$%//$Cc12%"
+app.config["JWT_SECRET_KEY"] = "39vnv03+$^4"  # ¡Usa una clave segura en producción!
+jwt = JWTManager(app)
+crear_bd()
+
+
 @app.route("/")
 def index():
-    crear_bd()
-    return render_template("index.html")
+    return 'API Compraventa Coches'
+    
 
-@app.route("/login", methods=["GET", "POST"])
+
+@app.route("/login", methods=["POST"])
 def login():
-    if request.method == "POST":
-        nombre = request.form["usuario"]
-        contraseña = request.form["contrasena"]
-        
-        if iniciar_sesion(nombre, contraseña):  # Esta es tu función propia
-            session["usuario"] = nombre
-            return 'Implementar esta parte. Ver anuncios, crear anuncios, buscar...'  # O a donde quieras llevar al usuario
-        else:
-            flash("Usuario o contraseña incorrectos")
-            return redirect(url_for("login"))
-        
-    return render_template("login.html") 
+    datos = request.get_json()
+    if not datos or "nombre" not in datos or "contraseña" not in datos:
+        return {"error": "Nombre y contraseña son obligatorios"}, 400 
+    nombre = datos["nombre"]
+    contraseña = datos['contraseña']
 
-@app.route("/registro", methods=["GET", "POST"])
+    if iniciar_sesion(nombre, contraseña):
+        token = create_access_token(identity=nombre)
+        return {"acces_token": token}, 200 
+    else:
+        return {"error": "El usuario no existe o credenciales incorrectas"}, 401
+
+@app.route("/registro", methods=["POST"])
 def registro():
-    if request.method == "POST":
-        usuario = request.form["usuario"].strip()
-        contrasena = request.form["contrasena"]
-        confirmar = request.form["confirmar"]
+    datos = request.get_json() # datos de la peticion del usuario
 
-        # Validación de campos vacíos
-        if not usuario or not contrasena or not confirmar:
-            flash("Todos los campos son obligatorios.")
-            return redirect(url_for("registro"))
+    if not datos or 'nombre' not in datos or 'contraseña' not in datos:
+        return {"error": "Nombre y contraseña son obligatorios"}, 400 
+    nombre = datos['nombre']
+    contraseña = datos['contraseña']
 
-        # Verificación de contraseñas
-        if contrasena != confirmar:
-            flash("Las contraseñas no coinciden.")
-            return redirect(url_for("registro"))
-
-        # Intentar registrar al usuario
-        creado = registrar_usuario(usuario, contrasena)
-        if creado:
-            flash("Registrado correctamente, por favor, inicie sesión")
-            return redirect(url_for("login"))
-        else:
-            flash("No se pudo registrar el usuario. Es posible que ya exista.")
-            return redirect(url_for("registro"))
-
-    return render_template("registro.html")
-
+    if registrar_usuario(nombre, contraseña):
+        return {"mensaje": "Usuario registrado exitosamente"}, 201 
+    else:
+        return {"error": "El usuario ya existe o datos inválidos"}, 409
 
 @app.route("/valoraciones")
 def valoraciones():
-    return render_template("valoraciones.html")
+    pass
+
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5050)  
