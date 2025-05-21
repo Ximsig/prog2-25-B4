@@ -204,7 +204,39 @@ def buscar_vehiculos_filtros():
 
 # Funciones de valoración e historial
 def estimar_valor_reventa():
-    pass
+    if token is None:
+        print("❌ Debes iniciar sesión primero.")
+        return
+
+    marca = input("Marca: ").strip()
+    modelo = input("Modelo: ").strip()
+    anio = input("Año: ").strip()
+    kilometraje = input("Kilómetros: ").strip()
+
+    if not marca or not modelo or not anio.isdigit() or not kilometraje.isdigit():
+        print("❌ Datos inválidos. Marca y modelo no vacíos, año y km numéricos.")
+        return
+
+    datos = {
+        "marca": marca,
+        "modelo": modelo,
+        "anio": int(anio),
+        "kilometraje": int(kilometraje)
+    }
+
+    headers = {"Authorization": f"Bearer {token}"}
+
+    try:
+        respuesta = requests.post(f"{URL}/estimar_valor_reventa", json=datos, headers=headers)
+        if respuesta.status_code == 200:
+            info = respuesta.json()
+            print(f"\nValor estimado: ${info['valor_estimado']}")
+            print("Reporte:\n" + info['reporte'])
+        else:
+            print(f"❌ Error: {respuesta.json().get('error', 'Error desconocido')}")
+    except Exception as e:
+        print(f"🚨 Error de conexión: {e}")
+
 
 
 def gestionar_historial_vehiculo():

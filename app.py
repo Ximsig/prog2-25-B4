@@ -1,8 +1,9 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from database import *
 from gestor_anuncios import GestorAnuncios
 from vehiculo import Vehiculo
+from estimador import EstimadorValorReventa
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = "39vnv03+$^4"  # ¡Usa una clave segura en producción!
@@ -129,7 +130,6 @@ def obtener_anuncios():
             for a in anuncios
         ]
     }, 200
-    
 @app.route("/publicar_anuncio", methods=["POST"])
 @jwt_required()
 def publicar_anuncio():
@@ -156,7 +156,53 @@ def publicar_anuncio():
         return {"error": f"Falta el campo: {e}"}, 400
     except Exception as e:
         return {"error": f"Error al publicar anuncio: {str(e)}"}, 500
+   
+@app.route("/estimar_valor_reventa", methods=["POST"])
+@jwt_required()
+def estimar_valor_reventa_api():
+    datos = request.get_json()
+    marca = datos.get("marca")
+    modelo = datos.get("modelo")
+    anio = datos.get("anio")
+    kilometraje = datos.get("kilometraje")
 
+    if not marca or not modelo or anio is None or kilometraje is None:
+        return {"error": "Faltan datos: marca, modelo, año y kilometraje son obligatorios"}, 400
 
+    try:
+        gestor = GestorAnuncios()
+        anuncios = gestor.cargar_anuncios()
+
+        # Construir datos_mercado como dict {marca: {modelo: {'valor_base': precio_promedio}}}
+        datos_mercado = {}
+        for a in anuncios:
+            m = a.marca.lower()
+            mo = a.modelo.lower()
+            if m not in datos_mercado:
+                datos_mercado[m] = {}
+            if mo not in datos_mercado[m]:
+                datos_mercado[m][mo] = {"precios": []}
+            datos_mercado[m][mo]["precios"].append(a.precio)
+
+        # Calcular promedio de precios para cada marca-modelo
+        for m in datos_mercado:
+            for mo in datos_mercado[m]:
+                precios = datos_mercado[m][mo]["precios"]
+                datos_mercado[m][mo] = {"valor_base": sum(precios) / len(precios)}
+
+        # Usar claves en minúscula para buscar
+        marca_key = marca.lower()
+        modelo_key = modelo.lower()
+
+        if marca_key not in datos_mercado or modelo_key not in datos_mercado[marca_key]:
+            return {"error": f"No se encontraron anuncios para {marca} {modelo}"}, 404
+
+        est = EstimadorValorReventa(marca_key, modelo_key, int(anio), int(kilometraje), datos_mercado)
+        valor = est.calcular_valor_reventa()
+        reporte = est.generar_reporte_estimacion()
+        return jsonify({"valor_estimado": valor, "reporte": reporte}), 200
+
+    except Exception as e:
+        return {"error": f"Error calculando valor de reventa: {str(e)}"}, 500
 if __name__ == "__main__":
     app.run(debug=True, port=5050)  
