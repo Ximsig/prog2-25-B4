@@ -126,3 +126,25 @@ def iniciar_sesion(nombre, contraseña):
     finally:
         if conn:
             conn.close()
+
+def mostrar_usuarios():
+    """
+    Muestra una lista con todos los nombres de usuario registrados en la base de datos.
+    """
+    conn = None
+    try:
+        conn = sqlite3.connect("compraventa_vehiculos.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT nombre FROM usuarios")
+        usuarios = cursor.fetchall()
+        if usuarios:
+            print("Usuarios registrados:")
+            for usuario in usuarios:
+                print(f"- {usuario[0]}")
+        else:
+            print("No hay usuarios registrados.")
+    except sqlite3.Error as e:
+        print(f"Error de base de datos: {e}")
+    finally:
+        if conn:
+            conn.close()
