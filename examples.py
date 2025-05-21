@@ -1,6 +1,5 @@
 import requests
 import json
-import re
 from datetime import datetime
 
 URL = "http://127.0.0.1:5050"
