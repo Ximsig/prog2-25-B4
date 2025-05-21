@@ -201,12 +201,12 @@ def crear_chat(id_usuario1, id_usuario2):
         if conn:
             conn.close()
 
-def ver_chats():
+def ver_chats(id_usuario):
     conn = None
     try:
         conn = sqlite3.connect("compraventa_vehiculos.db")
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM chats")
+        cursor.execute("SELECT * FROM chats where id_usuario1=? or id_usuario2=?", (id_usuario, id_usuario))
         consulta = cursor.fetchall()
         
         if not consulta:
