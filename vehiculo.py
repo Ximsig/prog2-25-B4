@@ -21,9 +21,14 @@ class Vehiculo:
         try:
             partes = linea.strip().split(",")
             return Vehiculo(
-                partes[0], partes[1], int(partes[2]), int(partes[3]),
-                float(partes[4]), partes[5], bool(int(partes[6])),
-                partes[7] if len(partes) > 7 else ""
+                partes[0],  # marca
+                partes[1],  # modelo
+                int(partes[2]),  # año
+                int(partes[3]),  # kilometros
+                float(partes[4]), # precio
+                partes[5],  # descripcion
+                partes[7] if len(partes) > 7 else "",  # anunciante
+                bool(int(partes[6]))  # destacado
             )
         except Exception as e:
             raise ValueError("Línea inválida en el archivo de vehículos.") from e
