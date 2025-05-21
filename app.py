@@ -73,9 +73,6 @@ def api_leer_chat(id_receptor):
     return {"mensajes": mensajes}, 200
 
 
-@app.route("/valoraciones", methods=["GET", "POST"])
-def valoraciones():
-    pass
 
 @app.route("/vehiculo/<id_vehiculo>/historial", methods=["POST"])
 @jwt_required()
@@ -103,7 +100,12 @@ def agregar_historial(id_vehiculo):
 def ver_historial(id_vehiculo):
     historial = obtener_historial_vehiculo(id_vehiculo)
     return {"historial": historial}, 200
-
+    
+# funcion para obtener usuario
+@app.route("/quien_soy", methods=["GET"])
+@jwt_required()
+def quien_soy():
+    return {"usuario": get_jwt_identity()}, 200
 
 if __name__ == "__main__":
     app.run(debug=True, port=5050)  
