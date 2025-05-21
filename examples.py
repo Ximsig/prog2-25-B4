@@ -152,7 +152,19 @@ def publicar_anuncio():
     pass
 
 def listar_anuncios():
-    pass
+    try:
+        respuesta = requests.get(f"{URL}/anuncios")
+        if respuesta.status_code == 200:
+            anuncios = respuesta.json().get("anuncios", [])
+            for i, a in enumerate(anuncios):
+                estrella = "⭐" if a["destacado"] else ""
+                print(f"[{i}] Coche: {a['marca']} {a['modelo']} ({a['año']})")
+                print(f"     Km: {a['kilometros']} | Precio: {a['precio']}€ | Anunciante: {a['anunciante']} {estrella}")
+                print(f"     {a['descripcion']}\n")
+        else:
+            print(f"❌ Error al obtener anuncios: {respuesta.status_code}")
+    except Exception as e:
+        print(f"🚨 Error al conectar con el servidor: {e}")
 
 def buscar_vehiculos_filtros():
     pass
