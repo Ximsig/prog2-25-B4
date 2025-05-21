@@ -27,6 +27,7 @@ def menu_usuario():
     print("13. Listar anuncios")
     print("14. Buscar vehículos con filtros")
     print("15. Mostrar historial de usuario")
+    print("16. Añadir valoración")
     print('0. Cerra sesión')
     return input('Elige opción: ')
 
@@ -94,7 +95,7 @@ def realizar_compra():
     """Procesa la compra de un vehículo"""
     pass
 
-# Funciones de chat (Jordi) no tocar.
+
 def enviar_mensaje():
     """Envía un mensaje a un chat , se crea si no existe"""
     pass
@@ -132,6 +133,10 @@ def gestionar_historial_vehiculo():
 
 def mostrar_historial_usuario():
     """Muestra el historial de transacciones del usuario"""
+    pass
+
+def anadir_valoracion():
+    """Permite al usuario añadir su reseña"""
     pass
 
 if __name__ == "__main__":
@@ -181,6 +186,8 @@ if __name__ == "__main__":
                     buscar_vehiculos_filtros()
                 case '15':
                     mostrar_historial_usuario()
+                case '16':
+                    anadir_valoracion() 
                 case '0':
                     print("Cerrando sesión...")
                     token = None  # Cierra sesión
