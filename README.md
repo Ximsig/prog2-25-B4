@@ -23,6 +23,71 @@
 
 ## Instrucciones de instalación y ejecución
 [//]: # (Indicad aquí qué habría que hacer para ejecutar vuestra aplicación)
+Instalación
+Clona o descarga el repositorio del proyecto en tu máquina local.
+
+Abre una terminal y navega a la carpeta raíz del proyecto.
+
+(Opcional pero recomendado) Crea un entorno virtual y actívalo:
+
+bash
+Copiar
+python -m venv env
+# Windows
+env\Scripts\activate
+# Linux / macOS
+source env/bin/activate
+Instala las dependencias necesarias:
+
+bash
+Copiar
+pip install -r requirements.txt
+Si no tienes un archivo requirements.txt, instala manualmente:
+
+bash
+Copiar
+pip install flask flask-jwt-extended requests
+(Agrega otras librerías que uses en el proyecto.)
+
+Ejecución del servidor API
+En la terminal, asegúrate de estar en la carpeta raíz del proyecto y con el entorno virtual activado.
+
+Ejecuta el servidor Flask con:
+
+bash
+Copiar
+python app.py
+El servidor correrá por defecto en http://127.0.0.1:5050/
+
+Verifica que esté corriendo abriendo en el navegador http://127.0.0.1:5050/ — debería mostrar un mensaje de bienvenida.
+
+Uso del cliente (ejemplo de interacción)
+En otra terminal, con entorno virtual activado, ejecuta:
+
+bash
+Copiar
+python examples.py
+
+# Sigue el menú interactivo para:
+
+Registrar usuarios
+
+Iniciar sesión
+
+Publicar anuncios
+
+Comprar vehículos
+
+Enviar mensajes, etc.
+
+Notas adicionales
+La base de datos se crea automáticamente la primera vez que arrancas la API.
+
+Las rutas y funcionalidades están definidas en app.py.
+
+El cliente examples.py se comunica con la API vía HTTP.
+
+Para producción, cambia la clave JWT en app.py por una segura.
 
 ## Resumen de la API
 [//]: # Esta es una API web básica construida con Flask que permite a los usuarios registrarse, iniciar sesión y acceder a diferentes secciones como valoraciones. Incluye manejo de sesiones, validaciones simples y estructura inicial para expandir funcionalidades como creación y visualización de anuncios.
