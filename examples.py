@@ -1,4 +1,3 @@
-# Aqui hacemos el menú para que el usuario interactúe con la API.
 import requests
 import json
 
@@ -28,8 +27,15 @@ def menu_usuario():
     print("14. Buscar vehículos con filtros")
     print("15. Mostrar historial de usuario")
     print("16. Añadir valoración")
-    print('0. Cerra sesión')
+    print('0. Cerrar sesión')
     return input('Elige opción: ')
+
+def menu_historial():
+    print("\n--- MENÚ HISTORIAL DE VEHÍCULO ---")
+    print("1. Añadir registro")
+    print("2. Ver historial")
+    print("0. Volver")
+    return input("Elige opción: ")
 
 # Funciones de autenticación
 def registrar_usuario():
@@ -51,10 +57,9 @@ def registrar_usuario():
             print(f"❌ Error: {error}")
 
     except requests.exceptions.RequestException as e:
-        print(f"❌ Error: {error}")
+        print(f"❌ Error: {e}")
 
 def iniciar_sesion():
-    """Inicia sesión y almacena el token"""
     global token
     nombre = input("Nombre: ")
     contraseña = input("Contraseña: ")
@@ -77,32 +82,26 @@ def ver_valoraciones():
 
     for nombre, resena in datos.items():
         print('-'*50)
-        print(f'{nombre} ({resena['rating']}):\n{resena['valoracion']}')
+        print(f'{nombre} ({resena["rating"]}):\n{resena["valoracion"]}')
     print('-'*50)
 
-
 # Funciones de gestión de vehículos
-
 def agregar_vehiculo():
-    """Añade un vehículo nuevo (solo vendedores)"""
     pass
 
 def mostrar_vehiculos():
-    """Muestra lista de vehículos disponibles"""
     pass
 
 def realizar_compra():
-    """Procesa la compra de un vehículo"""
     pass
-
 
 def enviar_mensaje():
     receptor = input("Nombre del usuario: ")
     mensaje = input("Mensaje: ")
-    
+
     headers = {"Authorization": f"Bearer {token}"}
     datos = {"receptor": receptor, "mensaje": mensaje}
-    
+
     try:
         respuesta = requests.post(
             f"{URL}/enviar_mensaje",
@@ -119,7 +118,7 @@ def enviar_mensaje():
 def leer_chat():
     receptor = input("Nombre del receptor: ")
     headers = {"Authorization": f"Bearer {token}"}
-    
+
     try:
         respuesta = requests.get(
             f"{URL}/leer_chat/{receptor}",
@@ -147,35 +146,113 @@ def ver_chats():
     except Exception as e:
         print(f"🚨 Error: {e}")
 
-
 # Funciones de anuncios y búsqueda
 def publicar_anuncio():
-    """Publica un nuevo anuncio de vehículo"""
     pass
 
 def listar_anuncios():
-    """Muestra todos los anuncios disponibles"""
     pass
 
 def buscar_vehiculos_filtros():
-    """Busca vehículos aplicando filtros"""
     pass
 
 # Funciones de valoración e historial
 def estimar_valor_reventa():
-    """Calcula el valor de reventa de un vehículo"""
     pass
 
 def gestionar_historial_vehiculo():
-    """Añade entradas al historial de un vehículo"""
-    pass
+    if token is None:
+        print("❌ Debes iniciar sesión primero.")
+        return
+
+    id_vehiculo = input("ID del vehículo: ")
+
+    print("Tipo de registro:")
+    print("1. Mantenimiento")
+    print("2. Revisión")
+    print("3. Siniestro")
+    tipo_opcion = input("Elige tipo (1-3): ")
+
+    tipos_validos = {'1': 'mantenimiento', '2': 'revision', '3': 'siniestro'}
+
+    if tipo_opcion not in tipos_validos:
+        print("❌ Tipo inválido.")
+        return
+
+    tipo = tipos_validos[tipo_opcion]
+    fecha = input("Fecha (YYYY-MM-DD): ")
+    descripcion = input("Descripción: ")
+
+    valor_estimado = None
+    if tipo == 'siniestro':
+        valor_estimado_str = input("Valor estimado (numérico): ")
+        try:
+            valor_estimado = float(valor_estimado_str)
+        except ValueError:
+            print("❌ Valor estimado inválido.")
+            return
+
+    datos = {
+        "tipo": tipo,
+        "fecha": fecha,
+        "descripcion": descripcion
+    }
+
+    if valor_estimado is not None:
+        datos["valor_estimado"] = valor_estimado
+
+    headers = {"Authorization": f"Bearer {token}"}
+
+    try:
+        respuesta = requests.post(
+            f"{URL}/vehiculo/{id_vehiculo}/historial",
+            json=datos,
+            headers=headers
+        )
+        if respuesta.status_code == 201:
+            print("✅ Registro añadido correctamente al historial.")
+        else:
+            print(f"❌ Error: {respuesta.json().get('error', 'Error desconocido')}")
+    except Exception as e:
+        print(f"🚨 Error de conexión: {e}")
+
+def mostrar_historial_vehiculo():
+    if token is None:
+        print("❌ Debes iniciar sesión primero.")
+        return
+
+    id_vehiculo = input("ID del vehículo: ")
+
+    headers = {"Authorization": f"Bearer {token}"}
+
+    try:
+        respuesta = requests.get(
+            f"{URL}/vehiculo/{id_vehiculo}/historial",
+            headers=headers
+        )
+        if respuesta.status_code == 200:
+            historial = respuesta.json().get("historial", [])
+            if not historial:
+                print("No hay registros en el historial para este vehículo.")
+                return
+
+            print(f"\nHistorial del vehículo {id_vehiculo}:")
+            for idx, registro in enumerate(historial, 1):
+                print(f"{idx}. Tipo: {registro['tipo'].capitalize()}")
+                print(f"   Fecha: {registro['fecha']}")
+                print(f"   Descripción: {registro['descripcion']}")
+                if registro['tipo'] == 'siniestro':
+                    print(f"   Valor estimado: {registro['valor_estimado']}")
+                print("-" * 40)
+        else:
+            print(f"❌ Error: {respuesta.json().get('error', 'Error desconocido')}")
+    except Exception as e:
+        print(f"🚨 Error de conexión: {e}")
 
 def mostrar_historial_usuario():
-    """Muestra el historial de transacciones del usuario"""
     pass
 
 def anadir_valoracion():
-    """Permite al usuario añadir su reseña"""
     pass
 
 if __name__ == "__main__":
@@ -183,7 +260,7 @@ if __name__ == "__main__":
     while True:
         if token is None:  # Menú principal (no autenticado)
             opcion = menu_principal()
-            
+
             match opcion:
                 case '1':
                     registrar_usuario()
@@ -196,10 +273,10 @@ if __name__ == "__main__":
                     break
                 case _:
                     print("Opción no válida. Intente nuevamente.")
-        
+
         else:  # Menú de usuario (autenticado)
             opcion = menu_usuario()
-            
+
             match opcion:
                 case '4':
                     agregar_vehiculo()
@@ -216,7 +293,16 @@ if __name__ == "__main__":
                 case '10':
                     estimar_valor_reventa()
                 case '11':
-                    gestionar_historial_vehiculo()
+                    while True:
+                        opcion_historial = menu_historial()
+                        if opcion_historial == '1':
+                            gestionar_historial_vehiculo()
+                        elif opcion_historial == '2':
+                            mostrar_historial_vehiculo()
+                        elif opcion_historial == '0':
+                            break
+                        else:
+                            print("Opción no válida.")
                 case '12':
                     publicar_anuncio()
                 case '13':
@@ -226,7 +312,7 @@ if __name__ == "__main__":
                 case '15':
                     mostrar_historial_usuario()
                 case '16':
-                    anadir_valoracion() 
+                    anadir_valoracion()
                 case '0':
                     print("Cerrando sesión...")
                     token = None  # Cierra sesión
