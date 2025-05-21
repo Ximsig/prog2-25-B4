@@ -1,5 +1,5 @@
 class Vehiculo:
-    def __init__(self, marca, modelo, año, kilometros, precio, descripcion, destacado=False, anunciante):
+    def __init__(self, marca, modelo, año, kilometros, precio, descripcion, anunciante, destacado=False):
         self.marca = marca
         self.modelo = modelo
         self.año = año
