@@ -1,5 +1,5 @@
 import random
-from db import registrar_usuario, iniciar_sesion as db_iniciar_sesion
+from slq_usuarios import registrar_usuario, iniciar_sesion as db_iniciar_sesion
 
 class Usuario:
     # Clase que representa a un usuario dentro de la plataforma
