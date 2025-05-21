@@ -243,6 +243,7 @@ def enviar_mensaje(id_emisor, id_receptor, mensaje):
     ids usuarios
     mensaje(str): mensaje a enviar
     """
+    crear_chat(id_emisor, id_receptor)
     conn = None
     try:
         if not mensaje.strip():
