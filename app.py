@@ -1,6 +1,7 @@
 from flask import Flask, request
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from database import *
+from gestor_anuncios import GestorAnuncios
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = "39vnv03+$^4"  # ¡Usa una clave segura en producción!
@@ -106,6 +107,28 @@ def ver_historial(id_vehiculo):
 @jwt_required()
 def quien_soy():
     return {"usuario": get_jwt_identity()}, 200
+
+
+@app.route("/anuncios", methods=["GET"])
+def obtener_anuncios():
+    gestor = GestorAnuncios()
+    anuncios = gestor.cargar_anuncios()
+    return {
+        "anuncios": [
+            {
+                "marca": a.marca,
+                "modelo": a.modelo,
+                "año": a.año,
+                "kilometros": a.kilometros,
+                "precio": a.precio,
+                "descripcion": a.descripcion,
+                "destacado": a.destacado,
+                "anunciante": a.anunciante
+            }
+            for a in anuncios
+        ]
+    }, 200
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5050)  
