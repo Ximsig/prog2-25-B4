@@ -97,16 +97,55 @@ def realizar_compra():
 
 
 def enviar_mensaje():
-    """Envía un mensaje a un chat , se crea si no existe"""
-    pass
+    receptor = input("Nombre del usuario: ")
+    mensaje = input("Mensaje: ")
+    
+    headers = {"Authorization": f"Bearer {token}"}
+    datos = {"receptor": receptor, "mensaje": mensaje}
+    
+    try:
+        respuesta = requests.post(
+            f"{URL}/enviar_mensaje",
+            json=datos,
+            headers=headers
+        )
+        if respuesta.status_code == 200:
+            print("✅ Mensaje enviado")
+        else:
+            print(f"❌ Error: {respuesta.json().get('error')}")
+    except Exception as e:
+        print(f"🚨 Error: {e}")
 
 def leer_chat():
-    """Muestra el contenido de un chat"""
-    pass
+    receptor = input("Nombre del receptor: ")
+    headers = {"Authorization": f"Bearer {token}"}
+    
+    try:
+        respuesta = requests.get(
+            f"{URL}/leer_chat/{receptor}",
+            headers=headers
+        )
+        if respuesta.status_code == 200:
+            mensajes = respuesta.json().get("mensajes", [])
+            for msg in mensajes:
+                print(msg)
+        else:
+            print(f"❌ Error: {respuesta.json().get('error')}")
+    except Exception as e:
+        print(f"🚨 Error: {e}")
 
 def ver_chats():
-    """Lista todos los chats del usuario"""
-    pass
+    headers = {"Authorization": f"Bearer {token}"}
+    try:
+        respuesta = requests.get(f"{URL}/ver_chats", headers=headers)
+        if respuesta.status_code == 200:
+            chats = respuesta.json().get("chats", [])
+            for chat in chats:
+                print(f"Chat de: {chat[0]} y {chat[1]}")
+        else:
+            print(f"❌ Error: {respuesta.json().get('error')}")
+    except Exception as e:
+        print(f"🚨 Error: {e}")
 
 
 # Funciones de anuncios y búsqueda
