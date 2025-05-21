@@ -43,19 +43,3 @@ class HistorialDelVehiculo:
                 lineas.append("-" * 40)
         
         return "\n".join(lineas)
-
-
-# Ejemplo de uso
-if __name__ == "__main__":
-    historial = HistorialDelVehiculo()
-    
-    # Agregar registros de mantenimiento y revisiones
-    historial.agregar_mantenimiento("2025-01-10", "Cambio de aceite y filtros")
-    historial.agregar_revision("2025-02-15", "Revisión general del vehículo")
-    
-    # Agregar un siniestro
-    historial.agregar_siniestro("2025-03-01", "Accidente menor en colisión con otro vehículo", "$1500")
-    
-    # Generar y mostrar el informe de siniestralidad
-    informe = historial.generar_informe_siniestralidad()
-    print(informe)

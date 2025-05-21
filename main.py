@@ -1,7 +1,6 @@
-from slq_usuarios import crear_bd, registrar_usuario, iniciar_sesion, mostrar_usuarios
+from database import crear_bd, registrar_usuario, iniciar_sesion, mostrar_usuarios, crear_chat, enviar_mensaje, leer_chat, ver_chats
 from usuarios import Usuario, Vehiculo as VehiculoPlataforma, Plataforma
 from contratos import generar_contrato_pdf
-from chat import crear_chat, enviar_mensaje, leer_chat, ver_chats
 from estimador import EstimadorValorReventa
 from historial import HistorialDelVehiculo
 from gestor_anuncios import GestorAnuncios
