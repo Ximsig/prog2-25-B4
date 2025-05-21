@@ -271,8 +271,38 @@ def mostrar_historial_vehiculo():
 def mostrar_historial_usuario():
     pass
 
-def anadir_valoracion():
-    pass
+def anadir_valoracion(usuario):
+    """Permite al usuario añadir su reseña"""
+    try:
+        rating = int(input('Cuantas estrellas nos das(1-5)⭐? '))
+    except Exception as e:
+        return f'Error: {e}, tienes que introducir un valor numérico'
+    valoracion = input('Comentarios: ')
+    fecha = datetime.now().strftime("%Y-%m-%d")
+
+    # leemos el json
+    with open("valoraciones.json", "r") as jsonread:
+        contenido = json.load(jsonread)
+
+    # añadir / modificar valoración
+    contenido[usuario] = {
+        'rating' : '⭐'*rating, 
+        'valoracion' : valoracion, 
+        'fecha' : fecha
+        }
+
+    with open("valoraciones.json", 'w') as file:
+        json.dump(contenido, file)
+
+def obtener_usuario_actual():
+    headers = {"Authorization": f"Bearer {token}"}
+    try:
+        respuesta = requests.get(f"{URL}/quien_soy", headers=headers)
+        if respuesta.status_code == 200:
+            return respuesta.json().get("usuario")
+    except Exception as e:
+        print(f"Error al obtener usuario: {e}")
+    return None
 
 if __name__ == "__main__":
     print('🚀 BIENVENIDO A COMPRAVENTA DE VEHÍCULOS 🚀')
@@ -331,7 +361,7 @@ if __name__ == "__main__":
                 case '15':
                     mostrar_historial_usuario()
                 case '16':
-                    anadir_valoracion()
+                    anadir_valoracion(obtener_usuario_actual())
                 case '0':
                     print("Cerrando sesión...")
                     token = None  # Cierra sesión
