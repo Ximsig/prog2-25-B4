@@ -15,19 +15,17 @@ def menu_principal():
 
 def menu_usuario():
     print("\n ---MENÚ USUARIO---")
-    print("4. Agregar vehículo (vendedor)")
-    print("5. Mostrar vehículos disponibles")
+    print("4. Publicar anuncio")
+    print("5. Listar anuncios")
     print("6. Realizar compra")
     print("7. Enviar mensaje")
     print("8. Leer chat")
     print("9. Ver todos tus chats")
     print("10. Estimar valor de reventa")
     print("11. Gestionar historial de vehículo")
-    print("12. Publicar anuncio")
-    print("13. Listar anuncios")
-    print("14. Buscar vehículos con filtros")
-    print("15. Mostrar historial de usuario")
-    print("16. Añadir valoración")
+    print("12. Buscar vehículos con filtros")
+    print("13. Mostrar historial de usuario")
+    print("14. Añadir valoración")
     print('0. Cerrar sesión')
     return input('Elige opción: ')
 
@@ -414,9 +412,9 @@ if __name__ == "__main__":
 
             match opcion:
                 case '4':
-                    agregar_vehiculo()
+                    publicar_anuncio()
                 case '5':
-                    mostrar_vehiculos()
+                    listar_anuncios()
                 case '6':
                     realizar_compra()
                 case '7':
@@ -439,14 +437,10 @@ if __name__ == "__main__":
                         else:
                             print("Opción no válida.")
                 case '12':
-                    publicar_anuncio()
-                case '13':
-                    listar_anuncios()
-                case '14':
                     buscar_vehiculos_filtros()
-                case '15':
+                case '13':
                     mostrar_historial_usuario()
-                case '16':
+                case '14':
                     anadir_valoracion(obtener_usuario_actual())
                 case '0':
                     print("Cerrando sesión...")

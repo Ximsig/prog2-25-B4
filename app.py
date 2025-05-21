@@ -16,7 +16,6 @@ def index():
     return 'API Compraventa Coches'
     
 
-
 @app.route("/login", methods=["POST"])
 def login():
     datos = request.get_json()
