@@ -34,6 +34,18 @@ def crear_bd():
             )
         """)
 
+        # Tabla historial_vehiculo
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS historial_vehiculo (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id_vehiculo TEXT,
+                tipo TEXT,
+                fecha TEXT,
+                descripcion TEXT,
+                valor_estimado REAL
+            )
+        """)
+
         conn.commit()
         return True
     except sqlite3.Error as e:
@@ -311,6 +323,49 @@ def leer_chat(id_emisor, id_receptor):
         return []
     except sqlite3.Error as e:
         print(f"Error al leer chat: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+def agregar_registro_historial(id_vehiculo, tipo, fecha, descripcion, valor_estimado=None):
+    try:
+        conn = sqlite3.connect("compraventa_vehiculos.db")
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO historial_vehiculo (id_vehiculo, tipo, fecha, descripcion, valor_estimado)
+            VALUES (?, ?, ?, ?, ?)
+        """, (id_vehiculo, tipo, fecha, descripcion, valor_estimado))
+        conn.commit()
+        return True
+    except sqlite3.Error as e:
+        print(f"Error agregando historial: {e}")
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+def obtener_historial_vehiculo(id_vehiculo):
+    try:
+        conn = sqlite3.connect("compraventa_vehiculos.db")
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT tipo, fecha, descripcion, valor_estimado
+            FROM historial_vehiculo
+            WHERE id_vehiculo = ?
+            ORDER BY fecha
+        """, (id_vehiculo,))
+        rows = cursor.fetchall()
+        return [
+            {
+                "tipo": row[0],
+                "fecha": row[1],
+                "descripcion": row[2],
+                "valor_estimado": row[3]
+            } for row in rows
+        ]
+    except sqlite3.Error as e:
+        print(f"Error obteniendo historial: {e}")
         return []
     finally:
         if conn:
