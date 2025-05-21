@@ -2,6 +2,7 @@ from flask import Flask, request
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from database import *
 from gestor_anuncios import GestorAnuncios
+from vehiculo import Vehiculo
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = "39vnv03+$^4"  # ¡Usa una clave segura en producción!
@@ -128,6 +129,33 @@ def obtener_anuncios():
             for a in anuncios
         ]
     }, 200
+    
+@app.route("/publicar_anuncio", methods=["POST"])
+@jwt_required()
+def publicar_anuncio():
+    datos = request.get_json()
+    anunciante = get_jwt_identity()
+
+    try:
+        vehiculo = Vehiculo(
+            marca=datos["marca"],
+            modelo=datos["modelo"],
+            año=int(datos["año"]),
+            kilometros=int(datos["kilometros"]),
+            precio=float(datos["precio"]),
+            descripcion=datos["descripcion"],
+            anunciante=anunciante
+        )
+
+        gestor = GestorAnuncios()
+        gestor.publicar(vehiculo)
+
+        return {"mensaje": "Anuncio publicado correctamente"}, 201
+
+    except KeyError as e:
+        return {"error": f"Falta el campo: {e}"}, 400
+    except Exception as e:
+        return {"error": f"Error al publicar anuncio: {str(e)}"}, 500
 
 
 if __name__ == "__main__":
