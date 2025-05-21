@@ -371,3 +371,35 @@ def obtener_historial_vehiculo(id_vehiculo):
     finally:
         if conn:
             conn.close()
+
+def obtener_historial_usuario(usuario):
+    """
+    Devuelve un diccionario {id_vehiculo: [registros]} con el historial de todos los vehículos de un usuario.
+    """
+    # Ejemplo: asume que tienes una función obtener_vehiculos_usuario(usuario)
+    # y una función obtener_historial_vehiculo(id_vehiculo)
+    historiales = {}
+    vehiculos = obtener_vehiculos_usuario(usuario)  # Debe devolver una lista de IDs de vehículos
+    for id_vehiculo in vehiculos:
+        historial = obtener_historial_vehiculo(id_vehiculo)
+        historiales[id_vehiculo] = historial if historial else []
+    return historiales
+
+def obtener_vehiculos_usuario(usuario):
+    """
+    Devuelve una lista de IDs de vehículos asociados a un usuario.
+    """
+    conn = None
+    try:
+        conn = sqlite3.connect("compraventa_vehiculos.db")
+        cursor = conn.cursor()
+        # Ajusta el nombre de la tabla y el campo según tu modelo de datos
+        cursor.execute("SELECT id FROM vehiculos WHERE anunciante = ?", (usuario,))
+        rows = cursor.fetchall()
+        return [row[0] for row in rows]
+    except sqlite3.Error as e:
+        print(f"Error obteniendo vehículos del usuario: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()

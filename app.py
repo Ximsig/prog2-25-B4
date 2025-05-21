@@ -5,6 +5,9 @@ from gestor_anuncios import GestorAnuncios
 from vehiculo import Vehiculo
 from estimador import EstimadorValorReventa
 from usuarios import Plataforma
+import requests
+from examples import listar_anuncios
+from contratos import generar_contrato_pdf  # Añade esta importación al inicio
 
 plataforma = Plataforma()
 gestor = GestorAnuncios(plataforma=plataforma)
@@ -137,7 +140,7 @@ def obtener_anuncios():
                 "kilometros": a.kilometros,
                 "precio": a.precio,
                 "descripcion": a.descripcion,
-                "destacado": a.destacado,
+                "destacado": getattr(a, "destacado", False),  # <-- Añade esto
                 "anunciante": a.anunciante
             }
             for a in anuncios
@@ -149,6 +152,12 @@ def obtener_anuncios():
 def publicar_anuncio():
     datos = request.get_json()
     anunciante = get_jwt_identity()
+
+    # Asegúrate de que el anunciante está en la plataforma
+    usuario = next((u for u in plataforma.usuarios if u.nombre == anunciante), None)
+    if usuario is None:
+        from usuarios import Usuario
+        plataforma.usuarios.append(Usuario(anunciante))
 
     try:
         vehiculo = Vehiculo(
@@ -231,11 +240,72 @@ def api_realizar_compra():
     if not id_vehiculo:
         return {"error": "ID del vehículo es obligatorio"}, 400
 
+    # Buscar el vehículo antes de realizar la compra
+    vehiculo = gestor.buscar_vehiculo_por_id(id_vehiculo)
+    if not vehiculo:
+        return {"error": "Vehículo no encontrado"}, 404
+
     exito, error = gestor.realizar_compra(comprador_nombre, id_vehiculo)
     if exito:
-        return {"mensaje": "Compra realizada con éxito"}, 200
+        try:
+            from usuarios import Usuario
+            comprador = Usuario(comprador_nombre)
+            vendedor = Usuario(vehiculo.anunciante)
+            ruta_contrato = generar_contrato_pdf(comprador, vendedor, vehiculo)
+            return {
+                "mensaje": "Compra realizada con éxito",
+                "contrato": ruta_contrato,
+                "contrato_generado": True
+            }, 200
+        except Exception as e:
+            return {
+                "mensaje": "Compra realizada con éxito",
+                "error_contrato": str(e),
+                "contrato_generado": False
+            }, 200
     else:
         return {"error": error}, 400
     
+@app.route("/buscar_vehiculos", methods=["GET"])
+def buscar_vehiculos():
+    marca = request.args.get("marca", "").lower()
+    modelo = request.args.get("modelo", "").lower()
+    año = request.args.get("año")
+    precio_min = request.args.get("precio_min")
+    precio_max = request.args.get("precio_max")
+
+    gestor = GestorAnuncios()
+    anuncios = gestor.cargar_anuncios()
+
+    resultados = []
+    for a in anuncios:
+        if marca and a.marca.lower() != marca:
+            continue
+        if modelo and a.modelo.lower() != modelo:
+            continue
+        if año and str(a.año) != str(año):
+            continue
+        if precio_min and a.precio < float(precio_min):
+            continue
+        if precio_max and a.precio > float(precio_max):
+            continue
+        resultados.append({
+            "id": a.id,
+            "marca": a.marca,
+            "modelo": a.modelo,
+            "año": a.año,
+            "kilometros": a.kilometros,
+            "precio": a.precio,
+            "descripcion": a.descripcion,
+            "anunciante": a.anunciante
+        })
+
+    return jsonify({"resultados": resultados}), 200
+
+
 if __name__ == "__main__":
-    app.run(debug=True, port=5050)  
+    app.run(debug=True, port=5050)
+
+
+
+

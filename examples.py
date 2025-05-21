@@ -24,8 +24,7 @@ def menu_usuario():
     print("10. Estimar valor de reventa")
     print("11. Gestionar historial de vehículo")
     print("12. Buscar vehículos con filtros")
-    print("13. Mostrar historial de usuario")
-    print("14. Añadir valoración")
+    print("13. Añadir valoración")
     print('0. Cerrar sesión')
     return input('Elige opción: ')
 
@@ -93,24 +92,49 @@ def realizar_compra():
         print("❌ Debes iniciar sesión primero.")
         return
 
-    listar_anuncios()  # mostrar para que el usuario vea id o matrícula
-
-    id_vehiculo = input("ID del vehículo a comprar: ").strip()
-    if not id_vehiculo:
-        print("❌ El ID no puede estar vacío.")
-        return
-
-    headers = {"Authorization": f"Bearer {token}"}
-    datos = {"id_vehiculo": id_vehiculo}
-
+    # Primero obtener la lista de anuncios
     try:
+        respuesta_anuncios = requests.get(f"{URL}/anuncios")
+        if respuesta_anuncios.status_code != 200:
+            print("❌ Error al obtener los anuncios.")
+            return
+        
+        anuncios = respuesta_anuncios.json().get("anuncios", [])
+        if not anuncios:
+            print("No hay anuncios disponibles.")
+            return
+
+        # Mostrar anuncios
+        for a in anuncios:
+            estrella = "⭐" if a.get("destacado") else ""
+            print(f"[{a['id']}] Coche: {a['marca']} {a['modelo']} ({a['año']})")
+            print(f"     Km: {a['kilometros']} | Precio: {a['precio']}€ | Anunciante: {a['anunciante']} {estrella}")
+            print(f"     {a['descripcion']}\n")
+
+        # Pedir ID del vehículo
+        id_vehiculo = input("ID del vehículo a comprar: ").strip()
+        if not id_vehiculo:
+            print("❌ Debes introducir un ID de vehículo.")
+            return
+
+        # Realizar la compra
+        headers = {"Authorization": f"Bearer {token}"}
+        datos = {"id_vehiculo": id_vehiculo}
         respuesta = requests.post(f"{URL}/realizar_compra", json=datos, headers=headers)
+        
         if respuesta.status_code == 200:
+            datos_respuesta = respuesta.json()
             print("✅ Compra realizada con éxito.")
+            
+            if datos_respuesta.get("contrato_generado"):
+                ruta_contrato = datos_respuesta.get("contrato")
+                print(f"📄 Se ha generado el contrato de compraventa en: {ruta_contrato}")
+            else:
+                print("⚠️ No se pudo generar el contrato:", datos_respuesta.get("error_contrato"))
         else:
             print(f"❌ Error: {respuesta.json().get('error', 'Error desconocido')}")
     except Exception as e:
-        print(f"🚨 Error de conexión: {e}")
+        print(f"🚨 Error al conectar con el servidor: {e}")
 
 def enviar_mensaje():
     receptor = input("Nombre del usuario: ")
@@ -216,7 +240,42 @@ def listar_anuncios():
 
 
 def buscar_vehiculos_filtros():
-    pass
+    """Permite buscar vehículos usando filtros opcionales"""
+    print("\n--- Búsqueda de vehículos con filtros ---")
+    marca = input("Marca (dejar vacío para cualquier): ").strip()
+    modelo = input("Modelo (dejar vacío para cualquier): ").strip()
+    año = input("Año (dejar vacío para cualquier): ").strip()
+    precio_min = input("Precio mínimo (dejar vacío para cualquier): ").strip()
+    precio_max = input("Precio máximo (dejar vacío para cualquier): ").strip()
+
+    filtros = {}
+    if marca:
+        filtros["marca"] = marca
+    if modelo:
+        filtros["modelo"] = modelo
+    if año.isdigit():
+        filtros["año"] = int(año)
+    if precio_min.replace('.', '', 1).isdigit():
+        filtros["precio_min"] = float(precio_min)
+    if precio_max.replace('.', '', 1).isdigit():
+        filtros["precio_max"] = float(precio_max)
+
+    try:
+        respuesta = requests.get(f"{URL}/buscar_vehiculos", params=filtros)
+        if respuesta.status_code == 200:
+            resultados = respuesta.json().get("resultados", [])
+            if not resultados:
+                print("No se encontraron vehículos con esos filtros.")
+                return
+            print("\nResultados de la búsqueda:")
+            for v in resultados:
+                print(f"[{v['id']}] {v['marca']} {v['modelo']} ({v['año']}) - {v['kilometros']} km - {v['precio']}€")
+                print(f"    {v['descripcion']}")
+                print("-" * 40)
+        else:
+            print(f"❌ Error: {respuesta.json().get('error', 'Error desconocido')}")
+    except Exception as e:
+        print(f"🚨 Error al conectar con el servidor: {e}")
 
 # Funciones de valoración e historial
 def estimar_valor_reventa():
@@ -258,62 +317,84 @@ def gestionar_historial_vehiculo():
         print("❌ Debes iniciar sesión primero.")
         return
 
-    id_vehiculo = input("ID del vehículo: ").strip()
-    if not id_vehiculo:
-        print("❌ El ID del vehículo no puede estar vacío.")
-        return
-
-    print("Tipo de registro:")
-    print("1. Mantenimiento")
-    print("2. Revisión")
-    print("3. Siniestro")
-    tipo_opcion = input("Elige tipo (1-3): ").strip()
-
-    tipos_validos = {'1': 'mantenimiento', '2': 'revision', '3': 'siniestro'}
-
-    if tipo_opcion not in tipos_validos:
-        print("❌ Tipo inválido.")
-        return
-
-    tipo = tipos_validos[tipo_opcion]
-
-    fecha = input("Fecha (YYYY-MM-DD): ").strip()
-    # Validar formato fecha
+    # Primero mostrar los anuncios disponibles
     try:
-        datetime.strptime(fecha, '%Y-%m-%d')
-    except ValueError:
-        print("❌ Fecha inválida. Usa formato YYYY-MM-DD.")
-        return
-
-    descripcion = input("Descripción: ").strip()
-    if not descripcion:
-        print("❌ La descripción no puede estar vacía.")
-        return
-
-    valor_estimado = None
-    if tipo == 'siniestro':
-        valor_estimado_str = input("Valor estimado (numérico): ").strip()
-        try:
-            valor_estimado = float(valor_estimado_str)
-            if valor_estimado < 0:
-                print("❌ El valor estimado no puede ser negativo.")
-                return
-        except ValueError:
-            print("❌ Valor estimado inválido.")
+        respuesta_anuncios = requests.get(f"{URL}/anuncios")
+        if respuesta_anuncios.status_code != 200:
+            print("❌ Error al obtener los anuncios.")
+            return
+        
+        anuncios = respuesta_anuncios.json().get("anuncios", [])
+        if not anuncios:
+            print("No hay vehículos disponibles.")
             return
 
-    datos = {
-        "tipo": tipo,
-        "fecha": fecha,
-        "descripcion": descripcion
-    }
+        # Mostrar anuncios
+        print("\nVehículos disponibles:")
+        for a in anuncios:
+            print(f"[{a['id']}] {a['marca']} {a['modelo']} ({a['año']}) - {a['kilometros']} km")
 
-    if valor_estimado is not None:
-        datos["valor_estimado"] = valor_estimado
+        # Pedir ID del vehículo
+        id_vehiculo = input("\nID del vehículo para gestionar historial: ").strip()
+        if not id_vehiculo:
+            print("❌ El ID del vehículo no puede estar vacío.")
+            return
 
-    headers = {"Authorization": f"Bearer {token}"}
+        # Verificar que el ID existe
+        if not any(str(a['id']) == id_vehiculo for a in anuncios):
+            print("❌ ID de vehículo no válido.")
+            return
 
-    try:
+        print("\nTipo de registro:")
+        print("1. Mantenimiento")
+        print("2. Revisión")
+        print("3. Siniestro")
+        tipo_opcion = input("Elige tipo (1-3): ").strip()
+
+        tipos_validos = {'1': 'mantenimiento', '2': 'revision', '3': 'siniestro'}
+
+        if tipo_opcion not in tipos_validos:
+            print("❌ Tipo inválido.")
+            return
+
+        tipo = tipos_validos[tipo_opcion]
+
+        fecha = input("Fecha (YYYY-MM-DD): ").strip()
+        # Validar formato fecha
+        try:
+            datetime.strptime(fecha, '%Y-%m-%d')
+        except ValueError:
+            print("❌ Fecha inválida. Usa formato YYYY-MM-DD.")
+            return
+
+        descripcion = input("Descripción: ").strip()
+        if not descripcion:
+            print("❌ La descripción no puede estar vacía.")
+            return
+
+        valor_estimado = None
+        if tipo == 'siniestro':
+            valor_estimado_str = input("Valor estimado (numérico): ").strip()
+            try:
+                valor_estimado = float(valor_estimado_str)
+                if valor_estimado < 0:
+                    print("❌ El valor estimado no puede ser negativo.")
+                    return
+            except ValueError:
+                print("❌ Valor estimado inválido.")
+                return
+
+        datos = {
+            "tipo": tipo,
+            "fecha": fecha,
+            "descripcion": descripcion
+        }
+
+        if valor_estimado is not None:
+            datos["valor_estimado"] = valor_estimado
+
+        headers = {"Authorization": f"Bearer {token}"}
+
         respuesta = requests.post(f"{URL}/vehiculo/{id_vehiculo}/historial", json=datos, headers=headers)
         if respuesta.status_code == 201:
             print("✅ Registro añadido correctamente al historial.")
@@ -355,8 +436,6 @@ def mostrar_historial_vehiculo():
     except Exception as e:
         print(f"🚨 Error de conexión: {e}")
 
-def mostrar_historial_usuario():
-    pass
 
 def anadir_valoracion(usuario):
     """Permite al usuario añadir su reseña"""
@@ -451,11 +530,9 @@ if __name__ == "__main__":
                 case '12':
                     buscar_vehiculos_filtros()
                 case '13':
-                    mostrar_historial_usuario()
-                case '14':
                     anadir_valoracion(obtener_usuario_actual())
                 case '0':
                     print("Cerrando sesión...")
-                    token = None  # Cierra sesión
+                    token = None
                 case _:
                     print("Opción no válida. Intente nuevamente.")

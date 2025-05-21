@@ -58,28 +58,50 @@ class GestorAnuncios:
         return next((u for u in self.plataforma.usuarios if u.nombre == nombre), None)
 
     def realizar_compra(self, comprador_nombre, id_vehiculo):
-        comprador = self.obtener_usuario_por_nombre(comprador_nombre)
-        if comprador is None:
-            return False, "Usuario comprador no encontrado"
-        # Ya no chequeamos es_comprador, porque todos pueden comprar
-
-
-        vehiculo_con_index = [(i, v) for i, v in enumerate(self.cargar_anuncios()) if str(getattr(v, 'id', '')) == str(id_vehiculo)]
-        if not vehiculo_con_index:
+        # Primero buscar el vehículo
+        vehiculo = self.buscar_vehiculo_por_id(id_vehiculo)
+        if not vehiculo:
             return False, "Vehículo no encontrado"
 
-        index, vehiculo = vehiculo_con_index[0]
+        # Asegurarse de que el vendedor exista
+        vendedor_nombre = vehiculo.anunciante
+        if not vendedor_nombre:
+            return False, "Vendedor no especificado"
 
-        vendedor = self.obtener_usuario_por_nombre(vehiculo.anunciante)
+        # Crear vendedor si no existe
+        vendedor = self.obtener_usuario_por_nombre(vendedor_nombre)
         if vendedor is None:
-            return False, "Vendedor no encontrado"
+            from usuarios import Usuario
+            vendedor = Usuario(vendedor_nombre)
+            self.plataforma.usuarios.append(vendedor)
 
-        # Actualizar historial, eliminar anuncio
+        # Obtener o crear comprador
+        comprador = self.obtener_usuario_por_nombre(comprador_nombre)
+        if comprador is None:
+            from usuarios import Usuario
+            comprador = Usuario(comprador_nombre)
+            self.plataforma.usuarios.append(comprador)
+
+        # Realizar la compra
+        anuncios = self.cargar_anuncios()
+        index = next((i for i, v in enumerate(anuncios) if str(v.id) == str(id_vehiculo)), -1)
+        
+        if index == -1:
+            return False, "Vehículo no encontrado"
+
+        # Actualizar historial
         comprador.agregar_historial(vehiculo, "Compra")
         vendedor.agregar_historial(vehiculo, "Venta")
 
-        anuncios = self.cargar_anuncios()
+        # Eliminar anuncio
         del anuncios[index]
         self.guardar_anuncios(anuncios)
 
         return True, None
+
+    def buscar_vehiculo_por_id(self, id_vehiculo):
+        anuncios = self.cargar_anuncios()
+        for a in anuncios:
+            if str(a.id) == str(id_vehiculo):
+                return a
+        return None
