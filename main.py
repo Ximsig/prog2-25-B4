@@ -171,7 +171,7 @@ def main():
                     kilometros = int(input("Kilómetros: "))
                     precio = float(input("Precio: "))
                     descripcion = input("Descripción: ")
-                    vehiculo = VehiculoAnuncio(marca, modelo, año, kilometros, precio, descripcion)
+                    vehiculo = VehiculoAnuncio(marca, modelo, año, kilometros, precio, descripcion, anunciante=usuario_actual.nombre)
                     gestor_anuncios.publicar(vehiculo)
 
             elif opcion == "14":
