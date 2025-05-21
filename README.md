@@ -1,4 +1,4 @@
-# [Compramos_Tu_Coche_Lobato]
+# [Compramos_Tu_Coche]
 [//]: # (Incluid aquí la descripción de vuestra aplicación. Por cierto, así se ponen comentarios en Markdown)
 
 ## Autores
