@@ -6,203 +6,77 @@ from vehiculo import Vehiculo
 from estimador import EstimadorValorReventa
 
 app = Flask(__name__)
-app.config["JWT_SECRET_KEY"] = "39vnv03+$^4"  # ¡Usa una clave segura en producción!
+app.config["JWT_SECRET_KEY"] = "39vnv03+$^4"
 jwt = JWTManager(app)
-crear_bd()
 
-
-@app.route("/")
-def index():
-    return 'API Compraventa Coches'
-    
-
-
-@app.route("/login", methods=["POST"])
-def login():
-    datos = request.get_json()
-    if not datos or "nombre" not in datos or "contraseña" not in datos:
-        return {"error": "Nombre y contraseña son obligatorios"}, 400 
-    nombre = datos["nombre"]
-    contraseña = datos['contraseña']
-
-    if iniciar_sesion(nombre, contraseña):
-        token = create_access_token(identity=nombre)
-        return {"acces_token": token}, 200 
-    else:
-        return {"error": "El usuario no existe o credenciales incorrectas"}, 401
-
-@app.route("/registro", methods=["POST"])
-def registro():
-    datos = request.get_json() # datos de la peticion del usuario
-
-    if not datos or 'nombre' not in datos or 'contraseña' not in datos:
-        return {"error": "Nombre y contraseña son obligatorios"}, 400 
-    nombre = datos['nombre']
-    contraseña = datos['contraseña']
-
-    if registrar_usuario(nombre, contraseña):
-        return {"mensaje": "Usuario registrado exitosamente"}, 201 
-    else:
-        return {"error": "El usuario ya existe o datos inválidos"}, 409
-
-@app.route("/enviar_mensaje", methods=["POST"])
-@jwt_required()
-def api_enviar_mensaje():
-    datos = request.get_json()
-    id_emisor = get_jwt_identity()
-    id_receptor = datos.get("receptor")
-    mensaje = datos.get("mensaje")
-
-    if not id_receptor or not mensaje:
-        return {"error": "Receptor y mensaje son obligatorios"}, 400
-    
-    if enviar_mensaje(id_emisor, id_receptor, mensaje):
-        return {"mensaje": "Mensaje enviado"}, 200
-    else:
-        return {"error": "Error al enviar el mensaje"}, 400
-
-@app.route("/ver_chats", methods=["GET"])
-@jwt_required()
-def api_ver_chats():
-    usuario_actual = get_jwt_identity()
-    chats = ver_chats(usuario_actual)  
-    return {"chats": chats}, 200
-
-@app.route("/leer_chat/<id_receptor>", methods=["GET"])
-@jwt_required()
-def api_leer_chat(id_receptor):
-    id_emisor = get_jwt_identity()
-    mensajes = leer_chat(id_emisor, id_receptor)
-    return {"mensajes": mensajes}, 200
-
-
-
-@app.route("/vehiculo/<id_vehiculo>/historial", methods=["POST"])
-@jwt_required()
-def agregar_historial(id_vehiculo):
-    datos = request.get_json()
-    if not datos or "tipo" not in datos or "fecha" not in datos or "descripcion" not in datos:
-        return {"error": "Faltan datos"}, 400
-
-    tipo = datos["tipo"]
-    fecha = datos["fecha"]
-    descripcion = datos["descripcion"]
-    valor_estimado = datos.get("valor_estimado") if tipo == "siniestro" else None
-
-    if tipo not in ["mantenimiento", "revision", "siniestro"]:
-        return {"error": "Tipo no válido"}, 400
-
-    exito = agregar_registro_historial(id_vehiculo, tipo, fecha, descripcion, valor_estimado)
-    if exito:
-        return {"mensaje": "Registro añadido correctamente"}, 201
-    else:
-        return {"error": "Error al añadir el registro"}, 500
-
-@app.route("/vehiculo/<id_vehiculo>/historial", methods=["GET"])
-@jwt_required()
-def ver_historial(id_vehiculo):
-    historial = obtener_historial_vehiculo(id_vehiculo)
-    return {"historial": historial}, 200
-    
-# funcion para obtener usuario
-@app.route("/quien_soy", methods=["GET"])
-@jwt_required()
-def quien_soy():
-    return {"usuario": get_jwt_identity()}, 200
 
 
 @app.route("/anuncios", methods=["GET"])
 def obtener_anuncios():
     gestor = GestorAnuncios()
-    anuncios = gestor.cargar_anuncios()
-    return {
-        "anuncios": [
-            {
-                "marca": a.marca,
-                "modelo": a.modelo,
-                "año": a.año,
-                "kilometros": a.kilometros,
-                "precio": a.precio,
-                "descripcion": a.descripcion,
-                "destacado": a.destacado,
-                "anunciante": a.anunciante
-            }
-            for a in anuncios
-        ]
-    }, 200
-@app.route("/publicar_anuncio", methods=["POST"])
+    anuncios_todos_obj = gestor.cargar_anuncios()
+
+    marca_filtro = request.args.get('marca', default=None, type=str)
+    modelo_filtro = request.args.get('modelo', default=None, type=str)
+    anio_min_filtro = request.args.get('anio_min', default=None, type=int)
+    anio_max_filtro = request.args.get('anio_max', default=None, type=int)
+    precio_min_filtro = request.args.get('precio_min', default=None, type=float)
+    precio_max_filtro = request.args.get('precio_max', default=None, type=float)
+
+    anuncios_serializados = []
+
+    for anuncio_obj in anuncios_todos_obj:
+        if marca_filtro and marca_filtro.lower() not in anuncio_obj.marca.lower():
+            continue
+        if modelo_filtro and modelo_filtro.lower() not in anuncio_obj.modelo.lower():
+            continue
+        if anio_min_filtro and anuncio_obj.año < anio_min_filtro:
+            continue
+        if anio_max_filtro and anuncio_obj.año > anio_max_filtro:
+            continue
+        if precio_min_filtro and anuncio_obj.precio < precio_min_filtro:
+            continue
+        if precio_max_filtro and anuncio_obj.precio > precio_max_filtro:
+            continue
+
+        anuncios_serializados.append({
+            "marca": anuncio_obj.marca,
+            "modelo": anuncio_obj.modelo,
+            "año": anuncio_obj.año,
+            "kilometros": anuncio_obj.kilometros,
+            "precio": anuncio_obj.precio,
+            "descripcion": anuncio_obj.descripcion,
+            "destacado": anuncio_obj.destacado,
+            "anunciante": anuncio_obj.anunciante
+        })
+
+    return jsonify({"anuncios": anuncios_serializados}), 200
+
+@app.route("/usuarios/me/anuncios", methods=["GET"])
 @jwt_required()
-def publicar_anuncio():
-    datos = request.get_json()
-    anunciante = get_jwt_identity()
+def obtener_mis_anuncios_publicados():
+    usuario_actual = get_jwt_identity()
 
-    try:
-        vehiculo = Vehiculo(
-            marca=datos["marca"],
-            modelo=datos["modelo"],
-            año=int(datos["año"]),
-            kilometros=int(datos["kilometros"]),
-            precio=float(datos["precio"]),
-            descripcion=datos["descripcion"],
-            anunciante=anunciante
-        )
+    gestor = GestorAnuncios()
+    todos_los_anuncios_obj = gestor.cargar_anuncios()
 
-        gestor = GestorAnuncios()
-        gestor.publicar(vehiculo)
+    mis_anuncios_publicados_serializados = []
+    for anuncio_obj in todos_los_anuncios_obj:
+        if anuncio_obj.anunciante == usuario_actual:
+            mis_anuncios_publicados_serializados.append({
+                "marca": anuncio_obj.marca,
+                "modelo": anuncio_obj.modelo,
+                "año": anuncio_obj.año,
+                "kilometros": anuncio_obj.kilometros,
+                "precio": anuncio_obj.precio,
+                "descripcion": anuncio_obj.descripcion,
+                "destacado": anuncio_obj.destacado,
+                "anunciante": anuncio_obj.anunciante
+            })
 
-        return {"mensaje": "Anuncio publicado correctamente"}, 201
+    return jsonify({"anuncios_publicados": mis_anuncios_publicados_serializados}), 200
 
-    except KeyError as e:
-        return {"error": f"Falta el campo: {e}"}, 400
-    except Exception as e:
-        return {"error": f"Error al publicar anuncio: {str(e)}"}, 500
-   
-@app.route("/estimar_valor_reventa", methods=["POST"])
-@jwt_required()
-def estimar_valor_reventa_api():
-    datos = request.get_json()
-    marca = datos.get("marca")
-    modelo = datos.get("modelo")
-    anio = datos.get("anio")
-    kilometraje = datos.get("kilometraje")
 
-    if not marca or not modelo or anio is None or kilometraje is None:
-        return {"error": "Faltan datos: marca, modelo, año y kilometraje son obligatorios"}, 400
-
-    try:
-        gestor = GestorAnuncios()
-        anuncios = gestor.cargar_anuncios()
-
-        # Construir datos_mercado como dict {marca: {modelo: {'valor_base': precio_promedio}}}
-        datos_mercado = {}
-        for a in anuncios:
-            m = a.marca.lower()
-            mo = a.modelo.lower()
-            if m not in datos_mercado:
-                datos_mercado[m] = {}
-            if mo not in datos_mercado[m]:
-                datos_mercado[m][mo] = {"precios": []}
-            datos_mercado[m][mo]["precios"].append(a.precio)
-
-        # Calcular promedio de precios para cada marca-modelo
-        for m in datos_mercado:
-            for mo in datos_mercado[m]:
-                precios = datos_mercado[m][mo]["precios"]
-                datos_mercado[m][mo] = {"valor_base": sum(precios) / len(precios)}
-
-        # Usar claves en minúscula para buscar
-        marca_key = marca.lower()
-        modelo_key = modelo.lower()
-
-        if marca_key not in datos_mercado or modelo_key not in datos_mercado[marca_key]:
-            return {"error": f"No se encontraron anuncios para {marca} {modelo}"}, 404
-
-        est = EstimadorValorReventa(marca_key, modelo_key, int(anio), int(kilometraje), datos_mercado)
-        valor = est.calcular_valor_reventa()
-        reporte = est.generar_reporte_estimacion()
-        return jsonify({"valor_estimado": valor, "reporte": reporte}), 200
-
-    except Exception as e:
-        return {"error": f"Error calculando valor de reventa: {str(e)}"}, 500
 if __name__ == "__main__":
-    app.run(debug=True, port=5050)  
+    crear_bd()
+    app.run(debug=True, port=5050)
