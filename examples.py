@@ -319,15 +319,24 @@ def mostrar_historial_usuario():
 def anadir_valoracion(usuario):
     """Permite al usuario añadir su reseña"""
     try:
-        rating = int(input('Cuantas estrellas nos das(1-5)⭐? '))
+        rating = int(input('Cuantas estrellas nos das? (1-5)⭐: '))
+        while rating < 1 or rating > 5:
+            rating = int(input('Introduce un número del 1-5 ⭐: '))
     except Exception as e:
         return f'Error: {e}, tienes que introducir un valor numérico'
+    
     valoracion = input('Comentarios: ')
     fecha = datetime.now().strftime("%Y-%m-%d")
 
-    # leemos el json
-    with open("valoraciones.json", "r") as jsonread:
-        contenido = json.load(jsonread)
+    # leemos el json, si no hay se crea
+    try:
+        with open("valoraciones.json", "r") as jsonread:
+            contenido = json.load(jsonread)
+    except FileNotFoundError:
+        json.dump({}, open("valoraciones.json", "w"))
+        # leemos el archivo creado
+        with open("valoraciones.json", "r") as jsonread:
+            contenido = json.load(jsonread)
 
     # añadir / modificar valoración
     contenido[usuario] = {
