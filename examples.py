@@ -1,5 +1,7 @@
 import requests
 import json
+import re
+from datetime import datetime
 
 URL = "http://127.0.0.1:5050"
 token = None  # Para almacenar el token de autenticación
@@ -160,18 +162,22 @@ def buscar_vehiculos_filtros():
 def estimar_valor_reventa():
     pass
 
+
 def gestionar_historial_vehiculo():
     if token is None:
         print("❌ Debes iniciar sesión primero.")
         return
 
-    id_vehiculo = input("ID del vehículo: ")
+    id_vehiculo = input("ID del vehículo: ").strip()
+    if not id_vehiculo:
+        print("❌ El ID del vehículo no puede estar vacío.")
+        return
 
     print("Tipo de registro:")
     print("1. Mantenimiento")
     print("2. Revisión")
     print("3. Siniestro")
-    tipo_opcion = input("Elige tipo (1-3): ")
+    tipo_opcion = input("Elige tipo (1-3): ").strip()
 
     tipos_validos = {'1': 'mantenimiento', '2': 'revision', '3': 'siniestro'}
 
@@ -180,14 +186,28 @@ def gestionar_historial_vehiculo():
         return
 
     tipo = tipos_validos[tipo_opcion]
-    fecha = input("Fecha (YYYY-MM-DD): ")
-    descripcion = input("Descripción: ")
+
+    fecha = input("Fecha (YYYY-MM-DD): ").strip()
+    # Validar formato fecha
+    try:
+        datetime.strptime(fecha, '%Y-%m-%d')
+    except ValueError:
+        print("❌ Fecha inválida. Usa formato YYYY-MM-DD.")
+        return
+
+    descripcion = input("Descripción: ").strip()
+    if not descripcion:
+        print("❌ La descripción no puede estar vacía.")
+        return
 
     valor_estimado = None
     if tipo == 'siniestro':
-        valor_estimado_str = input("Valor estimado (numérico): ")
+        valor_estimado_str = input("Valor estimado (numérico): ").strip()
         try:
             valor_estimado = float(valor_estimado_str)
+            if valor_estimado < 0:
+                print("❌ El valor estimado no puede ser negativo.")
+                return
         except ValueError:
             print("❌ Valor estimado inválido.")
             return
