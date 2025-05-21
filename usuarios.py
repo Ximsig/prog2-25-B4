@@ -3,15 +3,8 @@ from database import registrar_usuario, iniciar_sesion as db_iniciar_sesion
 
 class Usuario:
     # Clase que representa a un usuario dentro de la plataforma
-    def __init__(self, nombre: str, es_comprador: bool = True):
-        """
-        Constructor de la clase Usuario.
-        Parámetros:
-        - nombre (str): nombre único del usuario.
-        - es_comprador (bool, opcional): indica si es comprador (True) o vendedor (False).
-        """
+    def __init__(self, nombre: str):
         self.nombre = nombre
-        self.es_comprador = es_comprador
         self.historial = []
 
     def __str__(self):
@@ -72,29 +65,13 @@ class Plataforma:
         self.usuarios = [] # Lista de usuarios
         self.vehiculos = [] # Lista de vehículos disponibles en venta
 
-    def registrar_usuario(self, nombre: str, contraseña: str, es_comprador: bool = True):
-        """
-        Registra un nuevo usuario, tanto en la base de datos como en memoria.
-        Parámetros:
-        - nombre (str): nombre del nuevo usuario.
-        - contraseña (str): contraseña en texto plano (se guarda en hash).
-        - es_comprador (bool): True si es comprador, False si es vendedor.
-        """
+    def registrar_usuario(self, nombre: str, contraseña: str):
         if registrar_usuario(nombre, contraseña):
-            usuario = Usuario(nombre, es_comprador)
+            usuario = Usuario(nombre)  # sin es_comprador
             self.usuarios.append(usuario)
             print(f"Usuario registrado: {usuario.nombre}")
 
     def iniciar_sesion(self, nombre: str, contraseña: str):
-        """
-        Inicia sesión verificando las credenciales en la base de datos.
-
-        Parámetros:
-        - nombre (str): nombre del usuario.
-        - contraseña (str): contraseña en texto plano.
-
-        Si las credenciales son correctas, carga el usuario en memoria si no estaba ya.
-        """
         if db_iniciar_sesion(nombre, contraseña):
             usuario = next((u for u in self.usuarios if u.nombre == nombre), None)
             if usuario is None:

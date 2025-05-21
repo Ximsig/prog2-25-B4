@@ -4,6 +4,10 @@ from database import *
 from gestor_anuncios import GestorAnuncios
 from vehiculo import Vehiculo
 from estimador import EstimadorValorReventa
+from usuarios import Plataforma
+
+plataforma = Plataforma()
+gestor = GestorAnuncios(plataforma=plataforma)
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = "39vnv03+$^4"  # ¡Usa una clave segura en producción!
@@ -21,15 +25,23 @@ def index():
 def login():
     datos = request.get_json()
     if not datos or "nombre" not in datos or "contraseña" not in datos:
-        return {"error": "Nombre y contraseña son obligatorios"}, 400 
+        return {"error": "Nombre y contraseña son obligatorios"}, 400
+
     nombre = datos["nombre"]
-    contraseña = datos['contraseña']
+    contraseña = datos["contraseña"]
 
     if iniciar_sesion(nombre, contraseña):
         token = create_access_token(identity=nombre)
-        return {"acces_token": token}, 200 
+
+        usuario = next((u for u in plataforma.usuarios if u.nombre == nombre), None)
+        if usuario is None:
+            from usuarios import Usuario
+            plataforma.usuarios.append(Usuario(nombre))
+
+        return {"access_token": token}, 200 
     else:
         return {"error": "El usuario no existe o credenciales incorrectas"}, 401
+
 
 @app.route("/registro", methods=["POST"])
 def registro():
@@ -118,6 +130,7 @@ def obtener_anuncios():
     return {
         "anuncios": [
             {
+                "id": a.id,
                 "marca": a.marca,
                 "modelo": a.modelo,
                 "año": a.año,
@@ -130,6 +143,7 @@ def obtener_anuncios():
             for a in anuncios
         ]
     }, 200
+
 @app.route("/publicar_anuncio", methods=["POST"])
 @jwt_required()
 def publicar_anuncio():
@@ -204,5 +218,24 @@ def estimar_valor_reventa_api():
 
     except Exception as e:
         return {"error": f"Error calculando valor de reventa: {str(e)}"}, 500
+    
+
+
+@app.route("/realizar_compra", methods=["POST"])
+@jwt_required()
+def api_realizar_compra():
+    comprador_nombre = get_jwt_identity()
+    datos = request.get_json()
+    id_vehiculo = datos.get("id_vehiculo")
+
+    if not id_vehiculo:
+        return {"error": "ID del vehículo es obligatorio"}, 400
+
+    exito, error = gestor.realizar_compra(comprador_nombre, id_vehiculo)
+    if exito:
+        return {"mensaje": "Compra realizada con éxito"}, 200
+    else:
+        return {"error": error}, 400
+    
 if __name__ == "__main__":
     app.run(debug=True, port=5050)  

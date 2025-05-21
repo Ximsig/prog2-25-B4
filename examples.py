@@ -64,14 +64,16 @@ def iniciar_sesion():
     contraseña = input("Contraseña: ")
 
     try:
-        respuesta = requests.post(f"{URL}/login", json={"nombre":nombre,"contraseña":contraseña})
-        if "acces_token" in respuesta.json():
-            token = respuesta.json()["acces_token"]
-        if respuesta.status_code == 200:
+        respuesta = requests.post(f"{URL}/login", json={"nombre": nombre, "contraseña": contraseña})
+        respuesta_json = respuesta.json()
+
+        if "access_token" in respuesta_json:
+            token = respuesta_json["access_token"]
             print("✅ Sesión iniciada correctamente")
         else:
-            error = respuesta.json().get("error", "Error desconocido")
+            error = respuesta_json.get("error", "Error desconocido")
             print(f"❌ Error: {error}")
+
     except requests.exceptions.RequestException as e:
         print(f"🚨 Error de conexión: {e}")
 
@@ -85,14 +87,30 @@ def ver_valoraciones():
     print('-'*50)
 
 # Funciones de gestión de vehículos
-def agregar_vehiculo():
-    pass
-
-def mostrar_vehiculos():
-    pass
 
 def realizar_compra():
-    pass
+    if token is None:
+        print("❌ Debes iniciar sesión primero.")
+        return
+
+    listar_anuncios()  # mostrar para que el usuario vea id o matrícula
+
+    id_vehiculo = input("ID del vehículo a comprar: ").strip()
+    if not id_vehiculo:
+        print("❌ El ID no puede estar vacío.")
+        return
+
+    headers = {"Authorization": f"Bearer {token}"}
+    datos = {"id_vehiculo": id_vehiculo}
+
+    try:
+        respuesta = requests.post(f"{URL}/realizar_compra", json=datos, headers=headers)
+        if respuesta.status_code == 200:
+            print("✅ Compra realizada con éxito.")
+        else:
+            print(f"❌ Error: {respuesta.json().get('error', 'Error desconocido')}")
+    except Exception as e:
+        print(f"🚨 Error de conexión: {e}")
 
 def enviar_mensaje():
     receptor = input("Nombre del usuario: ")
@@ -181,21 +199,21 @@ def publicar_anuncio():
     except Exception as e:
         print(f"🚨 Error al conectar con el servidor: {e}")
 
-
 def listar_anuncios():
     try:
         respuesta = requests.get(f"{URL}/anuncios")
         if respuesta.status_code == 200:
             anuncios = respuesta.json().get("anuncios", [])
-            for i, a in enumerate(anuncios):
+            for a in anuncios:
                 estrella = "⭐" if a["destacado"] else ""
-                print(f"[{i}] Coche: {a['marca']} {a['modelo']} ({a['año']})")
+                print(f"[{a['id']}] Coche: {a['marca']} {a['modelo']} ({a['año']})")
                 print(f"     Km: {a['kilometros']} | Precio: {a['precio']}€ | Anunciante: {a['anunciante']} {estrella}")
                 print(f"     {a['descripcion']}\n")
         else:
             print(f"❌ Error al obtener anuncios: {respuesta.status_code}")
     except Exception as e:
         print(f"🚨 Error al conectar con el servidor: {e}")
+
 
 def buscar_vehiculos_filtros():
     pass
@@ -234,8 +252,6 @@ def estimar_valor_reventa():
             print(f"❌ Error: {respuesta.json().get('error', 'Error desconocido')}")
     except Exception as e:
         print(f"🚨 Error de conexión: {e}")
-
-
 
 def gestionar_historial_vehiculo():
     if token is None:
@@ -298,11 +314,7 @@ def gestionar_historial_vehiculo():
     headers = {"Authorization": f"Bearer {token}"}
 
     try:
-        respuesta = requests.post(
-            f"{URL}/vehiculo/{id_vehiculo}/historial",
-            json=datos,
-            headers=headers
-        )
+        respuesta = requests.post(f"{URL}/vehiculo/{id_vehiculo}/historial", json=datos, headers=headers)
         if respuesta.status_code == 201:
             print("✅ Registro añadido correctamente al historial.")
         else:
