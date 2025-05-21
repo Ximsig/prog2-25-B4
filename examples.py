@@ -149,7 +149,40 @@ def ver_chats():
 
 # Funciones de anuncios y búsqueda
 def publicar_anuncio():
-    pass
+    """Envía un nuevo anuncio al backend autenticado"""
+    headers = {"Authorization": f"Bearer {token}"}
+
+    marca = input("Marca: ")
+    modelo = input("Modelo: ")
+    año = input("Año: ")
+    kilometros = input("Kilómetros: ")
+    precio = input("Precio: ")
+    descripcion = input("Descripción: ")
+
+    datos = {
+        "marca": marca,
+        "modelo": modelo,
+        "año": int(año),
+        "kilometros": int(kilometros),
+        "precio": float(precio),
+        "descripcion": descripcion
+    }
+
+    try:
+        respuesta = requests.post(
+            f"{URL}/publicar_anuncio",
+            json=datos,
+            headers=headers
+        )
+
+        if respuesta.status_code == 201:
+            print("✅ Anuncio publicado correctamente.")
+        else:
+            print(f"❌ Error: {respuesta.json().get('error', 'Error desconocido')}")
+
+    except Exception as e:
+        print(f"🚨 Error al conectar con el servidor: {e}")
+
 
 def listar_anuncios():
     try:
